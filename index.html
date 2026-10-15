@@ -429,6 +429,35 @@ tbody tr:last-child td{border-bottom:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+/* ===== COORDINACIÓN CONECTADA ===== */
+.cc-barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.cc-barra .esp{margin-left:auto}
+.cc-acc{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.mo-ancho{max-width:780px}
+.gc-sec{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.gc-sec-h{background:var(--surface-2);padding:10px 14px;font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.gc-sec-b{padding:14px;display:flex;flex-direction:column;gap:12px}
+.gc-fila{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.gc-fila .f{flex:1 1 170px}
+.gc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.gc-grid .wide{grid-column:1/-1}
+@media (max-width:640px){.gc-grid{grid-template-columns:1fr}}
+.gc-persona{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.gc-persona:last-child{border-bottom:0}
+.gc-persona b{font-size:14px}
+.gc-persona small{color:var(--ink-3);font-size:12px;margin-left:6px}
+.gc-roles{display:flex;gap:6px;flex-wrap:wrap}
+.gc-rol{display:inline-flex;align-items:center;gap:6px;background:var(--navy-soft);color:var(--navy);border-radius:4px;padding:3px 4px 3px 9px;font-size:12px}
+.gc-rol button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:14px;line-height:1;padding:0 4px}
+.gc-conds{display:flex;gap:14px;flex-wrap:wrap}
+.gc-conds label{display:flex;gap:6px;align-items:center;font-size:13.5px;cursor:pointer}
+.gc-liga{display:flex;gap:8px;align-items:center;background:var(--ok-soft);border:1px solid var(--ok-line);border-radius:6px;padding:10px}
+.gc-liga input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:12.5px}
+.gc-nota{font-size:12.5px;color:var(--ink-3)}
+.gc-link{background:none;border:none;color:var(--accent-ink);cursor:pointer;text-decoration:underline;font-size:12px;padding:0;font-family:var(--sans)}
+.gc-inv{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.gc-inv:last-child{border-bottom:0}
+
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -449,6 +478,7 @@ tbody tr:last-child td{border-bottom:0}
 .sesionbar-in{max-width:1080px;margin:0 auto;padding:7px 24px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .sesionbar-in .esp{margin-left:auto}
 </style>
+<script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -509,30 +539,28 @@ tbody tr:last-child td{border-bottom:0}
 <!-- ============ COORDINACIÓN (Dirección) ============ -->
 <section class="panel" id="p-coord" hidden>
   <div class="intro" style="margin-bottom:22px">
-    <h1>Cartera en trámite</h1>
-    <p>Todas las operaciones vivas, dónde está cada una y qué la detiene. Da clic en un renglón para ver el detalle.</p>
+    <h1>Cartera</h1>
+    <p>Todos los créditos dados de alta, su avance documental y el acceso de cada cliente. Usa <b>Gestionar</b> para dar de alta personas, roles, condiciones e invitaciones.</p>
   </div>
 
-  <div class="kpis" id="kpis"></div>
+  <div class="cc-barra">
+    <button type="button" class="btn btn-p btn-sm" id="ccNuevoCliente">+ Nuevo cliente</button>
+    <button type="button" class="btn btn-p btn-sm" id="ccNuevoCredito">+ Nuevo crédito</button>
+    <span class="esp"></span>
+    <button type="button" class="btn btn-g btn-sm" id="ccActualizar">Actualizar</button>
+  </div>
 
-  <div class="coord-alertas" id="coordAlertas"></div>
+  <div class="kpis" id="ccKpis"></div>
+  <div class="coord-alertas" id="ccAlertas"></div>
 
   <div class="panel-card">
-    <div class="panel-card-h">
-      <b>Operaciones</b>
-      <div class="filtros" id="filtros" role="group" aria-label="Filtrar operaciones">
-        <button type="button" class="filtro on" data-f="todas" aria-pressed="true">Todas</button>
-        <button type="button" class="filtro" data-f="atoradas" aria-pressed="false">Atoradas</button>
-        <button type="button" class="filtro" data-f="cliente" aria-pressed="false">Esperan al cliente</button>
-        <button type="button" class="filtro" data-f="listas" aria-pressed="false">Listas para comité</button>
-      </div>
-    </div>
+    <div class="panel-card-h"><b>Operaciones</b></div>
     <div class="scroll-x"><table class="tabla-coord">
       <thead><tr>
-        <th>Operación</th><th>Monto</th><th>Etapa y paso</th>
-        <th>Expediente</th><th>Días en el paso</th><th>Qué la detiene</th>
+        <th>Cliente</th><th>Crédito</th><th>Personas</th><th>Expediente</th>
+        <th>En revisión</th><th>Acceso del cliente</th><th></th>
       </tr></thead>
-      <tbody id="coordBody"></tbody>
+      <tbody id="ccBody"></tbody>
     </table></div>
   </div>
 </section>
@@ -5561,6 +5589,24 @@ function convertirArchivoBase64(archivo) {
 
 </script>
 
+
+<!-- ============ COORDINACIÓN: altas ============ -->
+<div class="ov" id="ovAlta"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="altaTit">
+  <div class="mo-h"><b id="altaTit">Alta</b><span id="altaSub"></span></div>
+  <div class="mo-b" id="altaCuerpo"></div>
+  <div class="mo-f">
+    <button type="button" class="btn btn-g btn-sm" id="altaCancelar">Cancelar</button>
+    <button type="button" class="btn btn-p btn-sm" id="altaGuardar">Guardar</button>
+  </div>
+</div></div>
+
+<!-- ============ COORDINACIÓN: gestionar un crédito ============ -->
+<div class="ov" id="ovGestion"><div class="mo mo-ancho" role="dialog" aria-modal="true" aria-labelledby="gcTit">
+  <div class="mo-h"><b id="gcTit">Gestionar crédito</b><span id="gcSub"></span></div>
+  <div class="mo-b" id="gcCuerpo"></div>
+  <div class="mo-f"><button type="button" class="btn btn-g btn-sm" id="gcCerrar">Cerrar</button></div>
+</div></div>
+
 <script>
 /* ============================================================
    CONEXIÓN CON LA API — Paso 1: entrada y selección de crédito
@@ -5577,12 +5623,12 @@ function convertirArchivoBase64(archivo) {
    una a la API.
    ============================================================ */
 
-// ---------- LLENA ESTOS DOS VALORES ----------
-var CONEXION = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbykPG-PWoe_1Bfed4rL764v4s4-_J5ALDyq2IT6XiowRJQW9esnxSjjlUQbqjweJmWr/exec',
-  GOOGLE_CLIENT_ID: '702092251446-cqnovl2e9v36focccm1kvk1oe105d7tv.apps.googleusercontent.com'
+// Los dos valores de conexión viven en el archivo config.js, junto a este.
+// Así, cuando se actualiza el portal, no hay que volver a llenarlos.
+var CONEXION = window.CONEXION_PORTAL || {
+  API_URL: 'PEGAR_URL_EXEC_DE_LA_API',
+  GOOGLE_CLIENT_ID: 'PEGAR_ID_DE_CLIENTE.apps.googleusercontent.com'
 };
-// ---------------------------------------------
 
 var SESION = null;            // { sesion, usuario: {email, nombre, rol} }
 var CREDITO_ACTIVO = null;    // { idCredito, idCliente, cliente, nombre, estado }
@@ -5635,7 +5681,7 @@ function accesoError(m){
 function arrancarConexion(){
   if (CONEXION.API_URL.indexOf('PEGAR') === 0 || CONEXION.GOOGLE_CLIENT_ID.indexOf('PEGAR') === 0) {
     acceso('Falta configuración', '');
-    return accesoError('Llena API_URL y GOOGLE_CLIENT_ID en la sección CONEXIÓN, al final del archivo.');
+    return accesoError('Falta el archivo config.js con API_URL y GOOGLE_CLIENT_ID, o no tiene los valores llenos.');
   }
 
   var guardada = null;
@@ -5715,11 +5761,12 @@ function elegirCredito(creditos, errorInvitacion){
   var u = SESION.usuario;
   var interno = u.rol !== 'Cliente';
 
+  // El personal interno sin créditos entra directo a la cartera para dar de alta el primero
+  if (!creditos.length && interno) return entrarSinCredito();
+
   if (!creditos.length) {
     acceso('Hola, ' + (u.nombre || u.email),
-      interno
-        ? 'Todavía no hay créditos dados de alta en el sistema.'
-        : 'Todavía no tienes créditos asignados. Abre la liga de invitación que te envió Factor GFC.');
+      'Todavía no tienes créditos asignados. Abre la liga de invitación que te envió Factor GFC.');
     if (errorInvitacion) accesoError(errorInvitacion);
     return;
   }
@@ -5739,12 +5786,17 @@ function elegirCredito(creditos, errorInvitacion){
   acceso('Hola, ' + (u.nombre || u.email), 'Elige el crédito con el que vas a trabajar.');
   if (errorInvitacion) accesoError(errorInvitacion);
 
-  $('accesoLista').innerHTML = creditos.map(function(c, i){
+  $('accesoLista').innerHTML = (interno
+      ? '<button type="button" data-cartera="1"><b>Ver la cartera completa</b><span>Coordinación: altas, personas, condiciones e invitaciones</span></button>'
+      : '') + creditos.map(function(c, i){
     return '<button type="button" data-i="' + i + '"><b>' + esc(c.idCredito + ' · ' + c.nombre) + '</b>' +
       '<span>' + esc(c.cliente) + (c.estado && c.estado !== 'Activo' ? ' · ' + esc(c.estado) : '') + '</span></button>';
   }).join('');
   Array.prototype.forEach.call($('accesoLista').querySelectorAll('button'), function(b){
-    b.addEventListener('click', function(){ entrarCredito(creditos[+b.getAttribute('data-i')]); });
+    b.addEventListener('click', function(){
+      if (b.getAttribute('data-cartera')) return entrarSinCredito();
+      entrarCredito(creditos[+b.getAttribute('data-i')]);
+    });
   });
 }
 
@@ -5781,6 +5833,30 @@ function entrarCredito(c){
   $('acceso').hidden = true;
 }
 
+// Personal interno sin crédito elegido: solo la pestaña Coordinación
+function entrarSinCredito(){
+  CREDITO_ACTIVO = null;
+  if (!PORTAL_INICIADO) { PORTAL_INICIADO = true; init(); }
+
+  var u = SESION.usuario;
+  DB.rol = ROL_PORTAL[u.rol] || 'jefe';
+  aplicarRol();
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
+    t.hidden = t.getAttribute('data-p') !== 'p-coord';
+  });
+  irTab('p-coord');
+  pintarCoord();
+
+  $('opNombre').textContent = 'Cartera';
+  $('opDet').textContent = 'Sin crédito seleccionado';
+  $('opCredito').textContent = '';
+  $('sesionUsuario').textContent = (u.nombre || u.email) + ' · ' + u.email + ' · ' + u.rol;
+  $('sesionbar').hidden = false;
+  var sim = document.querySelector('.simbar'); if (sim) sim.hidden = true;
+
+  $('acceso').hidden = true;
+}
+
 function cambiarCreditoPortal(){
   sessionStorage.setItem(CLAVE_ELEGIR, '1');
   location.reload();
@@ -5796,6 +5872,469 @@ function cerrarSesionPortal(){
 }
 
 arrancarConexion();
+
+</script>
+
+<script>
+/* ============================================================
+   COORDINACIÓN CONECTADA — Paso 2
+
+   La pestaña Coordinación ya no usa datos de demostración:
+   todo viene de la matriz a través de la API.
+
+   - Cartera: créditos, avance documental y acceso del cliente.
+   - Nuevo cliente / nuevo crédito (Coordinación y Administrador).
+   - Gestionar un crédito: personas y roles, condiciones e
+     invitaciones (las invitaciones solo Coordinación y Administrador).
+
+   Esta función pintarCoord() reemplaza a la de demostración.
+   ============================================================ */
+
+var COORD = { cartera: null, cargando: false, catalogos: null, clientes: null, gestion: null, cambios: false };
+
+var NOMBRE_CONDICION = {
+  gtiaHip: 'Garantía hipotecaria',
+  gtiaPre: 'Garantía prendaria',
+  agro: 'Crédito agropecuario',
+  puente: 'Crédito puente',
+  plazoLargo: 'Plazo largo'
+};
+
+function puedeAltas(){
+  var r = SESION && SESION.usuario && SESION.usuario.rol;
+  return r === 'Coordinación' || r === 'Administrador';
+}
+
+function ocupado(btn, si, texto){
+  if (!btn) return;
+  if (si) { btn._txt = btn.textContent; btn.disabled = true; btn.textContent = texto || 'Guardando…'; }
+  else { btn.disabled = false; if (btn._txt) btn.textContent = btn._txt; }
+}
+
+function opciones(lista, valor, vacia){
+  return (vacia ? '<option value="">' + esc(vacia) + '</option>' : '') +
+    lista.map(function(o){
+      var v = typeof o === 'object' ? o.v : o, t = typeof o === 'object' ? o.t : o;
+      return '<option value="' + esc(v) + '"' + (String(v) === String(valor || '') ? ' selected' : '') + '>' + esc(t) + '</option>';
+    }).join('');
+}
+
+function fechaCorta(v){
+  if (!v) return '—';
+  var d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+
+// ============================================================
+// CARTERA
+// ============================================================
+
+function pintarCoord(){
+  if (!SESION || SESION.usuario.rol === 'Cliente' || !$('ccBody')) return;
+  if (!COORD.cartera && !COORD.cargando) return cargarCartera();
+  if (COORD.cartera) dibujarCartera();
+}
+
+function cargarCartera(){
+  COORD.cargando = true;
+  $('ccBody').innerHTML = '<tr><td colspan="7" class="vacio">Cargando cartera…</td></tr>';
+  var pedidos = [apiPortal('carteraCoordinacion')];
+  if (!COORD.catalogos) pedidos.push(apiPortal('catalogosAlta'));
+
+  return Promise.all(pedidos).then(function(rs){
+    COORD.cargando = false;
+    COORD.cartera = rs[0].ok ? rs[0].datos : [];
+    COORD.error = rs[0].ok ? '' : rs[0].mensaje;
+    if (rs[1] && rs[1].ok) COORD.catalogos = rs[1].datos;
+    dibujarCartera();
+  });
+}
+
+function dibujarCartera(){
+  var ops = COORD.cartera || [];
+  var activos = ops.filter(function(o){ return o.estado === 'Activo'; });
+  var suma = function(campo){ return activos.reduce(function(a, o){ return a + (o.documentos[campo] || 0); }, 0); };
+  var sinAcceso = activos.filter(function(o){ return !o.accesosCliente.length; }).length;
+  var invPend = activos.reduce(function(a, o){ return a + o.invitacionesPendientes; }, 0);
+
+  $('ccNuevoCliente').hidden = !puedeAltas();
+  $('ccNuevoCredito').hidden = !puedeAltas();
+
+  var kpis = [
+    ['Créditos activos', activos.length, '', 'navy'],
+    ['En revisión', suma('enRevision'), suma('enRevision') ? 'Esperan dictamen' : 'Nada pendiente', suma('enRevision') ? 'warn' : 'ok'],
+    ['Pendientes del cliente', suma('pendientes'), suma('rechazados') ? suma('rechazados') + ' rechazados' : '', 'accent'],
+    ['Vencidos', suma('vencidos'), suma('vencidos') ? 'Pedir actualización' : 'Ninguno', suma('vencidos') ? 'bad' : 'ok'],
+    ['Sin acceso del cliente', sinAcceso, invPend ? invPend + ' liga(s) sin usar' : '', sinAcceso ? 'warn' : 'ok']
+  ];
+  $('ccKpis').innerHTML = kpis.map(function(k){
+    return '<div class="kpi k-' + k[3] + '"><span class="kpi-lbl">' + esc(k[0]) + '</span>' +
+      '<b class="kpi-num">' + esc(String(k[1])) + '</b>' +
+      (k[2] ? '<span class="kpi-pie">' + esc(k[2]) + '</span>' : '') + '</div>';
+  }).join('');
+
+  $('ccAlertas').innerHTML = COORD.error
+    ? '<div class="alerta"><span class="alerta-ic">!</span><div>' + esc(COORD.error) + '</div></div>'
+    : '';
+
+  if (!ops.length) {
+    $('ccBody').innerHTML = '<tr><td colspan="7" class="vacio">Todavía no hay créditos. ' +
+      (puedeAltas() ? 'Empieza con “+ Nuevo cliente”.' : 'Coordinación debe darlos de alta.') + '</td></tr>';
+    return;
+  }
+
+  $('ccBody').innerHTML = ops.map(function(o){
+    var d = o.documentos;
+    var pct = d.total ? Math.round(100 * d.aceptados / d.total) : 0;
+    var barra = pct >= 90 ? 'ok' : (pct >= 50 ? 'warn' : 'bad');
+    var acceso = o.accesosCliente.length
+      ? '<span class="chip c-ok">Activo</span><span class="sub">' + esc(o.accesosCliente.join(', ')) + '</span>'
+      : (o.invitacionesPendientes ? '<span class="chip c-warn">Liga enviada</span>' : '<span class="chip c-pend">Sin invitar</span>');
+    return '<tr>' +
+      '<td><b>' + esc(o.cliente) + '</b><span class="sub">' + esc(o.idCliente) + (o.analista ? ' · ' + esc(o.analista) : '') + '</span></td>' +
+      '<td>' + esc(o.idCredito + ' · ' + o.nombre) + '<span class="sub">' + esc([o.idSolicitud, o.tipoCredito, o.estado !== 'Activo' ? o.estado : ''].filter(String).join(' · ')) + '</span></td>' +
+      '<td class="num">' + o.personas + '</td>' +
+      '<td>' + (d.total
+        ? '<span class="mini-bar ' + barra + '"><i style="width:' + pct + '%"></i></span><span class="sub num">' + d.aceptados + ' de ' + d.total + ' aceptados</span>'
+        : '<span class="sub">Sin personas asignadas</span>') + '</td>' +
+      '<td class="num">' + (d.enRevision ? '<b>' + d.enRevision + '</b>' : '0') + '</td>' +
+      '<td>' + acceso + '</td>' +
+      '<td><div class="cc-acc">' +
+        '<button type="button" class="btn btn-p btn-sm" data-gestionar="' + esc(o.idCredito) + '">Gestionar</button>' +
+        '<button type="button" class="btn btn-g btn-sm" data-abrir="' + esc(o.idCredito) + '">Abrir</button>' +
+      '</div></td></tr>';
+  }).join('');
+
+  Array.prototype.forEach.call($('ccBody').querySelectorAll('[data-gestionar]'), function(b){
+    b.addEventListener('click', function(){ abrirGestion(b.getAttribute('data-gestionar')); });
+  });
+  Array.prototype.forEach.call($('ccBody').querySelectorAll('[data-abrir]'), function(b){
+    b.addEventListener('click', function(){
+      try { localStorage.setItem(KEY_CREDITO_ACTUAL, b.getAttribute('data-abrir')); } catch(e){}
+      location.reload();
+    });
+  });
+}
+
+
+// ============================================================
+// ALTAS: cliente y crédito
+// ============================================================
+
+var ALTA_MODO = null;
+
+function abrirAltaCliente(){
+  ALTA_MODO = 'cliente';
+  var c = COORD.catalogos || { tiposPersona: ['PF','PM'], analistas: [] };
+  $('altaTit').textContent = 'Nuevo cliente';
+  $('altaSub').textContent = 'Se crea su carpeta en Drive. Después podrás darle de alta un crédito.';
+  $('altaCuerpo').innerHTML =
+    '<div class="gc-grid">' +
+    '<div class="f wide"><label>Nombre o razón social <span class="req">*</span></label><input id="alNombre" autocomplete="off"></div>' +
+    '<div class="f"><label>Tipo de persona <span class="req">*</span></label><select id="alTipo">' +
+      opciones(c.tiposPersona.map(function(t){ return { v:t, t: t === 'PM' ? 'Persona moral' : 'Persona física' }; }), 'PM') + '</select></div>' +
+    '<div class="f"><label>RFC</label><input id="alRfc" maxlength="13" autocomplete="off" style="text-transform:uppercase"></div>' +
+    '<div class="f wide"><label>Analista asignado</label><select id="alAnalista">' +
+      opciones(c.analistas.map(function(a){ return { v:a.email, t:(a.nombre || a.email) + ' · ' + a.rol }; }), '', 'Sin asignar') + '</select></div>' +
+    '</div>';
+  $('ovAlta').classList.add('on');
+  $('alNombre').focus();
+}
+
+function abrirAltaCredito(idClientePreseleccionado){
+  ALTA_MODO = 'credito';
+  var c = COORD.catalogos || { tiposCredito: [], monedas: ['MXN'] };
+  $('altaTit').textContent = 'Nuevo crédito';
+  $('altaSub').textContent = 'Se asigna su número de solicitud y su carpeta en Drive.';
+  $('altaCuerpo').innerHTML = '<p class="gc-nota">Cargando clientes…</p>';
+  $('ovAlta').classList.add('on');
+
+  apiPortal('listarClientes').then(function(r){
+    if (!r.ok) { $('altaCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    var activos = r.datos.filter(function(x){ return x.estado === 'Activo'; });
+    if (!activos.length) {
+      $('altaCuerpo').innerHTML = '<p class="gc-nota">Primero da de alta un cliente.</p>';
+      return;
+    }
+    $('altaCuerpo').innerHTML =
+      '<div class="gc-grid">' +
+      '<div class="f wide"><label>Cliente <span class="req">*</span></label><select id="alCliente">' +
+        opciones(activos.map(function(x){ return { v:x.idCliente, t:x.idCliente + ' · ' + x.nombre }; }), idClientePreseleccionado, 'Selecciona…') + '</select></div>' +
+      '<div class="f wide"><label>Nombre del crédito <span class="req">*</span></label><input id="alNomCred" placeholder="Ej. Línea revolvente 2026" autocomplete="off"></div>' +
+      '<div class="f"><label>Tipo de crédito <span class="req">*</span></label><select id="alTipoCred">' + opciones(c.tiposCredito, '', 'Selecciona…') + '</select></div>' +
+      '<div class="f"><label>Moneda <span class="req">*</span></label><select id="alMoneda">' + opciones(c.monedas, 'MXN') + '</select></div>' +
+      '<div class="f"><label>Monto solicitado</label><input id="alMonto" inputmode="decimal" placeholder="0" autocomplete="off"></div>' +
+      '<div class="f"><label>Fecha de inicio</label><input id="alFecha" type="date"></div>' +
+      '</div>';
+  });
+}
+
+function guardarAlta(){
+  var btn = $('altaGuardar');
+  var v = function(id){ var el = $(id); return el ? el.value.trim() : ''; };
+
+  if (ALTA_MODO === 'cliente') {
+    ocupado(btn, true);
+    apiPortal('crearCliente', {
+      nombre: v('alNombre'), tipoPersona: v('alTipo'), rfc: v('alRfc').toUpperCase(), analistaAsignado: v('alAnalista')
+    }).then(function(r){
+      ocupado(btn, false);
+      if (!r.ok) return toast(r.mensaje);
+      toast('Cliente ' + r.datos.idCliente + ' creado. Ahora dale de alta su crédito.');
+      COORD.cartera = null;
+      abrirAltaCredito(r.datos.idCliente);
+    });
+  }
+
+  if (ALTA_MODO === 'credito') {
+    if (!$('alCliente')) return;
+    ocupado(btn, true);
+    apiPortal('crearCredito', {
+      idCliente: v('alCliente'), nombre: v('alNomCred'), tipoCredito: v('alTipoCred'),
+      moneda: v('alMoneda'), montoSolicitado: v('alMonto'), fechaInicio: v('alFecha')
+    }).then(function(r){
+      ocupado(btn, false);
+      if (!r.ok) return toast(r.mensaje);
+      toast('Crédito ' + r.datos.idCredito + ' creado (' + r.datos.idSolicitud + '). Ahora asigna sus personas.');
+      $('ovAlta').classList.remove('on');
+      ALTA_MODO = null;
+      COORD.cartera = null;
+      cargarCartera().then(function(){ abrirGestion(r.datos.idCredito); });
+    });
+  }
+}
+
+function cerrarAlta(){
+  $('ovAlta').classList.remove('on');
+  ALTA_MODO = null;
+  if (!COORD.cartera) cargarCartera();
+}
+
+
+// ============================================================
+// GESTIONAR UN CRÉDITO
+// ============================================================
+
+function abrirGestion(idCredito){
+  var op = (COORD.cartera || []).filter(function(o){ return o.idCredito === idCredito; })[0];
+  if (!op) return toast('No se encontró el crédito ' + idCredito + '.');
+
+  COORD.gestion = { op: op };
+  $('gcTit').textContent = op.cliente;
+  $('gcSub').textContent = op.idCredito + ' · ' + op.nombre + (op.idSolicitud ? ' · ' + op.idSolicitud : '');
+  $('gcCuerpo').innerHTML = '<p class="gc-nota">Cargando…</p>';
+  $('ovGestion').classList.add('on');
+  recargarGestion();
+}
+
+function recargarGestion(liga){
+  var op = COORD.gestion.op;
+  var pedidos = [
+    apiPortal('verExpediente', { idCredito: op.idCredito }),
+    apiPortal('listarPersonalidades', { idCliente: op.idCliente })
+  ];
+  if (puedeAltas()) pedidos.push(apiPortal('listarInvitaciones', { idCliente: op.idCliente }));
+
+  Promise.all(pedidos).then(function(rs){
+    var malo = rs.filter(function(r){ return !r.ok; })[0];
+    if (malo) { $('gcCuerpo').innerHTML = '<p class="acceso-error">' + esc(malo.mensaje) + '</p>'; return; }
+    COORD.gestion.exp = rs[0].datos;
+    COORD.gestion.personas = rs[1].datos;
+    COORD.gestion.invitaciones = rs[2] ? rs[2].datos.filter(function(i){
+      return i.idCredito === op.idCredito || i.idCredito === '*';
+    }) : [];
+    dibujarGestion(liga);
+  });
+}
+
+function dibujarGestion(liga){
+  var g = COORD.gestion, cat = COORD.catalogos || { roles: [], condiciones: [], tiposPersona: ['PF','PM'] };
+  var html = '';
+
+  // ---------- Personas y roles ----------
+  html += '<div class="gc-sec"><div class="gc-sec-h"><span>Personas y roles en este crédito</span>' +
+    '<button type="button" class="gc-link" id="gcBtnNuevaPersona">+ Nueva persona</button></div><div class="gc-sec-b">';
+
+  html += g.exp.personas.length
+    ? g.exp.personas.map(function(p){
+        return '<div class="gc-persona"><div><b>' + esc(p.nombre) + '</b><small>' + esc(p.idPersonalidad + ' · ' + p.tipoPersona) + '</small></div>' +
+          '<div class="gc-roles">' + p.roles.map(function(r){
+            return '<span class="gc-rol">' + esc(r.rol) + '<button type="button" title="Quitar este rol" data-quitar="' + esc(r.idRelacion) + '">×</button></span>';
+          }).join('') + '</div></div>';
+      }).join('')
+    : '<p class="gc-nota">Nadie tiene rol en este crédito todavía. Empieza por el acreditado.</p>';
+
+  html += '<div id="gcNuevaPersona" hidden><div class="gc-grid">' +
+    '<div class="f wide"><label>Nombre completo o razón social <span class="req">*</span></label><input id="npNombre" autocomplete="off"></div>' +
+    '<div class="f"><label>Tipo de persona <span class="req">*</span></label><select id="npTipo">' +
+      opciones(cat.tiposPersona.map(function(t){ return { v:t, t: t === 'PM' ? 'Persona moral' : 'Persona física' }; }), 'PF') + '</select></div>' +
+    '<div class="f"><label>RFC</label><input id="npRfc" maxlength="13" autocomplete="off" style="text-transform:uppercase"></div>' +
+    '<div class="f wide"><label>Pertenece a (estructura accionaria)</label><select id="npPadre">' +
+      opciones(g.personas.map(function(p){ return { v:p.idPersonalidad, t:p.idPersonalidad + ' · ' + p.nombre }; }), '', 'No aplica') + '</select></div>' +
+    '</div><div class="gc-fila" style="margin-top:10px"><button type="button" class="btn btn-p btn-sm" id="gcGuardarPersona">Guardar persona</button></div></div>';
+
+  html += g.personas.length
+    ? '<div class="gc-fila">' +
+        '<div class="f"><label>Persona</label><select id="gcPersona">' +
+          opciones(g.personas.map(function(p){ return { v:p.idPersonalidad, t:p.nombre + ' (' + p.tipoPersona + ')' }; }), '', 'Selecciona…') + '</select></div>' +
+        '<div class="f"><label>Rol en este crédito</label><select id="gcRol"><option value="">Elige primero la persona</option></select></div>' +
+        '<button type="button" class="btn btn-p btn-sm" id="gcAsignar">Asignar rol</button>' +
+      '</div><p class="gc-nota">Al asignar o quitar un rol, el checklist de documentos se ajusta solo.</p>'
+    : '<p class="gc-nota">El cliente no tiene personas registradas. Usa “+ Nueva persona”.</p>';
+
+  html += '</div></div>';
+
+  // ---------- Condiciones ----------
+  if (cat.condiciones.length) {
+    var actuales = g.exp.credito.condiciones || [];
+    html += '<div class="gc-sec"><div class="gc-sec-h"><span>Condiciones del crédito</span></div><div class="gc-sec-b">' +
+      '<div class="gc-conds">' + cat.condiciones.map(function(c){
+        return '<label><input type="checkbox" value="' + esc(c) + '"' + (actuales.indexOf(c) !== -1 ? ' checked' : '') + '> ' +
+          esc(NOMBRE_CONDICION[c] || c) + '</label>';
+      }).join('') + '</div>' +
+      '<div class="gc-fila"><button type="button" class="btn btn-p btn-sm" id="gcGuardarCond">Guardar condiciones</button></div>' +
+      '<p class="gc-nota">Agregan o quitan documentos, por ejemplo la escritura y el avalúo con garantía hipotecaria.</p>' +
+      '</div></div>';
+  }
+
+  // ---------- Invitaciones ----------
+  if (puedeAltas()) {
+    html += '<div class="gc-sec"><div class="gc-sec-h"><span>Acceso del cliente</span></div><div class="gc-sec-b">';
+
+    if (liga) {
+      html += '<div class="gc-liga"><input id="gcLiga" readonly value="' + esc(liga.liga || liga.codigo) + '">' +
+        '<button type="button" class="btn btn-p btn-sm" id="gcCopiar">Copiar</button></div>' +
+        '<p class="gc-nota">' + esc(liga.aviso) + ' Vence el ' + esc(fechaCorta(liga.expira)) + '. Pégala en un correo de Outlook para el cliente.</p>';
+    }
+
+    html += g.invitaciones.length
+      ? g.invitaciones.map(function(i){
+          var cls = { Pendiente:'c-warn', Usada:'c-ok', Revocada:'c-pend', Expirada:'c-pend' }[i.estado] || 'c-pend';
+          return '<div class="gc-inv"><div><span class="chip ' + cls + '">' + esc(i.estado) + '</span> ' +
+            esc(i.idInvitacion) + ' · ' + esc(i.correoEsperado || 'cualquier cuenta') +
+            (i.idCredito === '*' ? ' · todos sus créditos' : '') +
+            '<span class="sub">' + (i.estado === 'Usada' ? 'Usada por ' + esc(i.usadaPor) + ' el ' + esc(fechaCorta(i.usadaEl)) : 'Vence ' + esc(fechaCorta(i.expiraEl))) + '</span></div>' +
+            (i.estado === 'Pendiente' ? '<button type="button" class="gc-link" data-revocar="' + esc(i.idInvitacion) + '">Revocar</button>' : '') +
+            '</div>';
+        }).join('')
+      : '<p class="gc-nota">No se ha invitado al cliente a este crédito.</p>';
+
+    html += '<div class="gc-fila">' +
+      '<div class="f"><label>Correo del cliente (opcional)</label><input id="gcCorreo" type="email" placeholder="Si lo llenas, solo esa cuenta podrá usar la liga" autocomplete="off"></div>' +
+      '<div class="f"><label>Acceso a</label><select id="gcAlcance">' +
+        opciones([{ v: g.op.idCredito, t: 'Solo este crédito' }, { v: '*', t: 'Todos los créditos del cliente' }], g.op.idCredito) + '</select></div>' +
+      '<button type="button" class="btn btn-p btn-sm" id="gcInvitar">Generar liga</button>' +
+      '</div></div></div>';
+  }
+
+  $('gcCuerpo').innerHTML = html;
+  ligarGestion();
+}
+
+function ligarGestion(){
+  var g = COORD.gestion, cat = COORD.catalogos || { roles: [] };
+  var tras = function(btn, msg){
+    return function(r){
+      ocupado(btn, false);
+      if (!r.ok) return toast(r.mensaje);
+      toast(msg(r.datos));
+      COORD.cambios = true;
+      recargarGestion();
+    };
+  };
+
+  // Nueva persona
+  if ($('gcBtnNuevaPersona')) $('gcBtnNuevaPersona').onclick = function(){
+    $('gcNuevaPersona').hidden = !$('gcNuevaPersona').hidden;
+    if (!$('gcNuevaPersona').hidden) $('npNombre').focus();
+  };
+  if ($('gcGuardarPersona')) $('gcGuardarPersona').onclick = function(){
+    var b = this; ocupado(b, true);
+    apiPortal('crearPersonalidad', {
+      idCliente: g.op.idCliente, nombre: $('npNombre').value.trim(), tipoPersona: $('npTipo').value,
+      rfc: $('npRfc').value.trim().toUpperCase(), perteneceA: $('npPadre').value
+    }).then(tras(b, function(d){ return d.nombre + ' registrado(a) como ' + d.idPersonalidad + '. Ahora asígnale su rol.'; }));
+  };
+
+  // Roles: solo los que corresponden al tipo de persona
+  if ($('gcPersona')) $('gcPersona').onchange = function(){
+    var p = g.personas.filter(function(x){ return x.idPersonalidad === $('gcPersona').value; })[0];
+    $('gcRol').innerHTML = p
+      ? opciones(cat.roles.filter(function(r){ return r.slice(-2) === p.tipoPersona; }), '', 'Selecciona…')
+      : '<option value="">Elige primero la persona</option>';
+  };
+  if ($('gcAsignar')) $('gcAsignar').onclick = function(){
+    var b = this; ocupado(b, true, 'Asignando…');
+    apiPortal('asignarRol', { idCredito: g.op.idCredito, idPersonalidad: $('gcPersona').value, rol: $('gcRol').value })
+      .then(tras(b, function(d){ return 'Rol asignado. Checklist: ' + d.checklist.agregados + ' documento(s) nuevos.'; }));
+  };
+  Array.prototype.forEach.call($('gcCuerpo').querySelectorAll('[data-quitar]'), function(b){
+    b.onclick = function(){
+      if (!confirm('¿Quitar este rol? Los documentos pendientes que ya no apliquen se marcarán como "No aplica". Lo ya entregado se conserva.')) return;
+      apiPortal('quitarRol', { idRelacion: b.getAttribute('data-quitar') })
+        .then(tras(null, function(d){ return 'Rol retirado. ' + d.checklist.desactivados + ' documento(s) pasaron a No aplica.'; }));
+    };
+  });
+
+  // Condiciones
+  if ($('gcGuardarCond')) $('gcGuardarCond').onclick = function(){
+    var b = this; ocupado(b, true);
+    var conds = Array.prototype.map.call($('gcCuerpo').querySelectorAll('.gc-conds input:checked'), function(x){ return x.value; });
+    apiPortal('definirCondiciones', { idCredito: g.op.idCredito, condiciones: conds })
+      .then(tras(b, function(d){
+        return 'Condiciones guardadas. Checklist: +' + d.checklist.agregados + ', ' + d.checklist.desactivados + ' a No aplica.';
+      }));
+  };
+
+  // Invitaciones
+  if ($('gcInvitar')) $('gcInvitar').onclick = function(){
+    var b = this; ocupado(b, true, 'Generando…');
+    apiPortal('crearInvitacion', {
+      idCliente: g.op.idCliente, idCredito: $('gcAlcance').value, correoEsperado: $('gcCorreo').value.trim()
+    }).then(function(r){
+      ocupado(b, false);
+      if (!r.ok) return toast(r.mensaje);
+      COORD.cambios = true;
+      toast('Liga generada. Cópiala ahora: no se vuelve a mostrar.');
+      recargarGestion(r.datos);
+    });
+  };
+  Array.prototype.forEach.call($('gcCuerpo').querySelectorAll('[data-revocar]'), function(b){
+    b.onclick = function(){
+      if (!confirm('¿Revocar esta invitación? La liga dejará de funcionar.')) return;
+      apiPortal('revocarInvitacion', { idInvitacion: b.getAttribute('data-revocar') })
+        .then(tras(null, function(){ return 'Invitación revocada.'; }));
+    };
+  });
+  if ($('gcCopiar')) $('gcCopiar').onclick = function(){
+    var campo = $('gcLiga');
+    var ok = function(){ toast('Liga copiada. Pégala en el correo para el cliente.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(campo.value).then(ok, function(){ campo.select(); document.execCommand('copy'); ok(); });
+    } else { campo.select(); document.execCommand('copy'); ok(); }
+  };
+}
+
+function cerrarGestion(){
+  $('ovGestion').classList.remove('on');
+  COORD.gestion = null;
+  if (COORD.cambios) { COORD.cambios = false; COORD.cartera = null; cargarCartera(); }
+}
+
+
+// ---------- botones fijos ----------
+$('ccNuevoCliente').addEventListener('click', abrirAltaCliente);
+$('ccNuevoCredito').addEventListener('click', function(){ abrirAltaCredito(''); });
+$('ccActualizar').addEventListener('click', function(){ COORD.cartera = null; cargarCartera(); });
+$('altaGuardar').addEventListener('click', guardarAlta);
+$('altaCancelar').addEventListener('click', cerrarAlta);
+$('gcCerrar').addEventListener('click', cerrarGestion);
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  if ($('ovGestion').classList.contains('on')) cerrarGestion();
+  else if ($('ovAlta').classList.contains('on')) cerrarAlta();
+});
 
 </script>
 </body>
