@@ -5590,6 +5590,28 @@ function convertirArchivoBase64(archivo) {
 </script>
 
 
+<!-- ============ DOCUMENTOS: subir a Drive ============ -->
+<div class="ov" id="ovSubir"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="suTit">
+  <div class="mo-h"><b id="suTit">Subir documento</b><span id="suSub"></span></div>
+  <div class="mo-b">
+    <input type="file" id="suFile" hidden accept=".pdf,.jpg,.jpeg,.png,.xml,.zip">
+    <div class="filebox" id="suBox" tabindex="0" role="button">
+      <b>Arrastra el archivo aquí</b><span>o da clic para elegirlo — PDF, JPG, PNG, XML o ZIP, máximo 10 MB</span>
+      <span id="suNombre" style="display:block;margin-top:8px;font-weight:600;color:var(--ok)"></span>
+    </div>
+    <div class="f">
+      <label>Fecha del documento <span class="req" id="suFechaReq">*</span></label>
+      <input type="date" id="suFecha">
+      <span class="hint" id="suFechaHint"></span>
+    </div>
+    <p id="suErr" class="acceso-error" role="alert" hidden></p>
+  </div>
+  <div class="mo-f">
+    <button type="button" class="btn btn-g" id="suCancel">Cancelar</button>
+    <button type="button" class="btn btn-p" id="suOk">Enviar documento</button>
+  </div>
+</div></div>
+
 <!-- ============ COORDINACIÓN: altas ============ -->
 <div class="ov" id="ovAlta"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="altaTit">
   <div class="mo-h"><b id="altaTit">Alta</b><span id="altaSub"></span></div>
@@ -5944,7 +5966,7 @@ function cargarCartera(){
 
   return Promise.all(pedidos).then(function(rs){
     COORD.cargando = false;
-    COORD.cartera = rs[0].ok ? rs[0].datos : [];
+    COORD.cartera = rs[0].ok && Array.isArray(rs[0].datos) ? rs[0].datos : [];
     COORD.error = rs[0].ok ? '' : rs[0].mensaje;
     if (rs[1] && rs[1].ok) COORD.catalogos = rs[1].datos;
     dibujarCartera();
@@ -5964,7 +5986,8 @@ function dibujarCartera(){
   var kpis = [
     ['Créditos activos', activos.length, '', 'navy'],
     ['En revisión', suma('enRevision'), suma('enRevision') ? 'Esperan dictamen' : 'Nada pendiente', suma('enRevision') ? 'warn' : 'ok'],
-    ['Pendientes del cliente', suma('pendientes'), suma('rechazados') ? suma('rechazados') + ' rechazados' : '', 'accent'],
+    ['Pendientes del cliente', suma('pendientesCliente'), suma('rechazados') ? suma('rechazados') + ' por corregir' : '', 'accent'],
+    ['Pendientes internos', suma('pendientesInternos'), suma('pendientesInternos') ? 'Los genera Factor GFC' : 'Ninguno', 'navy'],
     ['Vencidos', suma('vencidos'), suma('vencidos') ? 'Pedir actualización' : 'Ninguno', suma('vencidos') ? 'bad' : 'ok'],
     ['Sin acceso del cliente', sinAcceso, invPend ? invPend + ' liga(s) sin usar' : '', sinAcceso ? 'warn' : 'ok']
   ];
@@ -6334,6 +6357,328 @@ document.addEventListener('keydown', function(e){
   if (e.key !== 'Escape') return;
   if ($('ovGestion').classList.contains('on')) cerrarGestion();
   else if ($('ovAlta').classList.contains('on')) cerrarAlta();
+});
+
+</script>
+
+<script>
+/* ============================================================
+   DOCUMENTOS CONECTADOS — Paso 3
+
+   La pestaña Documentos ya no usa la lista de demostración:
+   el checklist viene de la matriz y los archivos van a Drive.
+
+   - Cliente: ve solo lo que le toca entregar, por persona.
+   - Personal interno: ve todo el expediente del crédito y puede
+     subir también los documentos que genera Factor GFC.
+   - Subir / reemplazar: valida tipo y tamaño antes de enviar; la
+     API vuelve a validar todo (contenido, vigencia, permisos).
+   - Ver: abre el archivo guardado en Drive.
+
+   La revisión (aceptar / rechazar) llega en el paso 4.
+   Esta función pintarDocs() reemplaza a la de demostración.
+   ============================================================ */
+
+var DOCS = { exp: null, cargando: false, filtro: 'todos', cerrados: {}, subir: null };
+var EXT_PERMITIDAS = ['pdf', 'jpg', 'jpeg', 'png', 'xml', 'zip'];
+var MAX_MB = 10;
+
+function esInternoPortal(){ return SESION && SESION.usuario.rol !== 'Cliente'; }
+
+function pintarDocs(){
+  if (!SESION || !CREDITO_ACTIVO) return;
+  prepararVistaDocs();
+  if (!DOCS.exp && !DOCS.cargando) return cargarDocs();
+  if (DOCS.exp && !$('p-docs').hidden) dibujarDocs();
+}
+
+// La vista de demostración (lista de personalidades) ya no se usa
+function volverDocsPersonalidades(){ pintarDocs(); }
+function pintarSelectorPersonalidadesDocs(){}
+
+function prepararVistaDocs(){
+  ['docsPersonalidades', 'docsPersonalidad'].forEach(function(id){ if ($(id)) $(id).hidden = true; });
+  if ($('docsConectados')) return;
+
+  var intro = document.querySelector('#p-docs .intro');
+  var interno = esInternoPortal();
+  intro.querySelector('h1').textContent = interno ? 'Expediente del crédito.' : 'Lo que necesitamos de ti.';
+  intro.querySelector('p').textContent = interno
+    ? 'Todos los documentos del crédito, por persona. También puedes subir aquí los que genera Factor GFC.'
+    : 'Esta lista la preparó Factor GFC para tu crédito. Sube cada documento; aquí verás si se aceptó o si hay que corregir algo.';
+
+  var cont = document.createElement('div');
+  cont.id = 'docsConectados';
+  intro.parentNode.insertBefore(cont, intro.nextSibling);
+
+}
+
+function cargarDocs(){
+  DOCS.cargando = true;
+  $('docsConectados').innerHTML = '<p class="vacio">Cargando tus documentos…</p>';
+  return apiPortal('verExpediente', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    DOCS.cargando = false;
+    if (!r.ok) {
+      $('docsConectados').innerHTML = '<div class="alerta"><span class="alerta-ic">!</span><div>' + esc(r.mensaje) + '</div></div>';
+      return;
+    }
+    DOCS.exp = r.datos;
+    dibujarDocs();
+  });
+}
+
+function recargarDocs(){ DOCS.exp = null; return cargarDocs(); }
+
+
+// ---------- cómo se ve cada estado ----------
+function estadoDoc(d){
+  if (d.estado === 'No aplica') return { k:'na',   txt:'No aplica',    badge:'b-na',   fila:'',       accion:null };
+  if (d.estado === 'Vencido')   return { k:'pend', txt:'Vencido',      badge:'b-bad',  fila:'st-bad', accion:'Subir uno vigente' };
+  if (d.estado === 'Entregado' && d.estadoRevision === 'En revisión')
+                                return { k:'rev',  txt:'En revisión',  badge:'b-rev',  fila:'st-rev', accion:'Reemplazar' };
+  if (d.estado === 'Entregado') return { k:'ok',   txt:'Aceptado',     badge:'b-ok',   fila:'st-ok',  accion:'Reemplazar' };
+  if (d.estadoRevision === 'Rechazado')
+                                return { k:'pend', txt:'Rechazado',    badge:'b-bad',  fila:'st-bad', accion:'Subir corrección' };
+  return                               { k:'pend', txt:'Pendiente',    badge:'b-pend', fila:'',       accion:'Subir' };
+}
+
+function fechaMx(v){
+  if (!v) return '';
+  var d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+
+// ---------- dibujo ----------
+function dibujarDocs(){
+  var exp = DOCS.exp, interno = esInternoPortal();
+  var docs = exp.documentos.map(function(d){ d._e = estadoDoc(d); return d; });
+  var vivos = docs.filter(function(d){ return d._e.k !== 'na'; });
+  var cuenta = function(k){ return vivos.filter(function(d){ return d._e.k === k; }).length; };
+  var nOk = cuenta('ok'), nRev = cuenta('rev'), nPend = cuenta('pend');
+  var total = vivos.length;
+  var rechazados = vivos.filter(function(d){ return d._e.txt === 'Rechazado'; }).length;
+  var vencidos = vivos.filter(function(d){ return d._e.txt === 'Vencido'; }).length;
+
+  // Barra de avance (arriba de la pestaña)
+  var pct = total ? Math.round(100 * nOk / total) : 0;
+  $('pPct').textContent = pct + '%';
+  $('pLbl').textContent = total
+    ? nOk + ' de ' + total + ' aceptados' + (nRev ? ' · ' + nRev + ' en revisión' : '')
+    : 'Todavía no hay documentos asignados a este crédito';
+  $('pBar').innerHTML = total
+    ? '<i style="width:' + (100 * nOk / total) + '%;background:var(--ok-fill)"></i>' +
+      '<i style="width:' + (100 * nRev / total) + '%;background:var(--accent-fill)"></i>'
+    : '';
+  $('pChips').innerHTML =
+    '<span class="chip c-pend">' + nPend + ' por entregar</span>' +
+    (nRev ? '<span class="chip c-ok">' + nRev + ' en revisión</span>' : '') +
+    (rechazados ? '<span class="chip c-bad">' + rechazados + ' por corregir</span>' : '') +
+    (vencidos ? '<span class="chip c-bad">' + vencidos + ' vencidos</span>' : '');
+  $('nDocs').textContent = nPend;
+
+  if (!total) {
+    $('docsConectados').innerHTML = '<p class="vacio">' + (interno
+      ? 'Asigna personas y roles en Coordinación para generar el checklist.'
+      : 'Factor GFC todavía está preparando tu lista de documentos. Vuelve a entrar más tarde.') + '</p>';
+    return;
+  }
+
+  // Filtros
+  var filtros = [['todos', 'Todos', total], ['pend', 'Por entregar', nPend], ['rev', 'En revisión', nRev], ['ok', 'Aceptados', nOk]];
+  var html = '<div class="cc-barra">' + filtros.map(function(f){
+    return '<button type="button" class="btn btn-sm ' + (DOCS.filtro === f[0] ? 'btn-p' : 'btn-g') + '" data-filtro="' + f[0] + '">' +
+      esc(f[1]) + ' (' + f[2] + ')</button>';
+  }).join('') + '<span class="esp"></span><button type="button" class="btn btn-g btn-sm" id="docsActualizar">Actualizar</button></div>';
+
+  // Un grupo por persona
+  exp.personas.forEach(function(p){
+    var suyos = docs.filter(function(d){
+      if (d.idPersonalidad !== p.idPersonalidad) return false;
+      if (DOCS.filtro === 'todos') return interno || d._e.k !== 'na';
+      return d._e.k === DOCS.filtro;
+    });
+    if (!suyos.length) return;
+
+    var roles = p.roles.map(function(r){ return typeof r === 'object' ? r.rol : r; }).join(' · ');
+    var pendP = suyos.filter(function(d){ return d._e.k === 'pend'; }).length;
+    var cerrado = DOCS.cerrados[p.idPersonalidad];
+
+    html += '<div class="grp' + (cerrado ? ' cerrado' : '') + '">' +
+      '<button type="button" class="grp-h" data-grp="' + esc(p.idPersonalidad) + '">' +
+        '<span class="ar">▼</span>' +
+        '<span class="nm">' + esc(p.nombre) + '<span class="rol">' + esc(roles) + '</span></span>' +
+        '<span class="chip ' + (pendP ? 'c-pend' : 'c-ok') + '">' + (pendP ? pendP + ' por entregar' : 'Completo') + '</span>' +
+      '</button><div class="grp-b">' +
+      suyos.map(filaDoc).join('') +
+      '</div></div>';
+  });
+
+  $('docsConectados').innerHTML = html;
+
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-filtro]'), function(b){
+    b.onclick = function(){ DOCS.filtro = b.getAttribute('data-filtro'); dibujarDocs(); };
+  });
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-grp]'), function(b){
+    b.onclick = function(){
+      var id = b.getAttribute('data-grp');
+      DOCS.cerrados[id] = !DOCS.cerrados[id];
+      b.parentNode.classList.toggle('cerrado', !!DOCS.cerrados[id]);
+    };
+  });
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-subir]'), function(b){
+    b.onclick = function(){ abrirSubir(b.getAttribute('data-subir')); };
+  });
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-ver]'), function(b){
+    b.onclick = function(){ verArchivo(b.getAttribute('data-ver'), b); };
+  });
+  $('docsActualizar').onclick = recargarDocs;
+}
+
+function filaDoc(d){
+  var e = d._e, interno = esInternoPortal();
+  var meta = [];
+  if (d.compartido) meta.push(interno ? 'Compartido entre créditos de esta persona' : 'Sirve para todos tus créditos');
+  if (d.fechaVencimiento && e.k !== 'na') meta.push((e.txt === 'Vencido' ? 'Venció ' : 'Vence ') + fechaMx(d.fechaVencimiento));
+  if (d.requiereVigencia && d.vigenciaMeses && e.k === 'pend') meta.push('Vigencia: ' + d.vigenciaMeses + ' meses desde su fecha');
+  if (interno) meta.push('Lo entrega: ' + (d.responsable === 'Cliente' ? 'el cliente' : 'Factor GFC'));
+
+  var msg = '';
+  if (e.txt === 'Rechazado' && d.observacion) msg = '<div class="doc-msg m-bad"><b>Hay que corregirlo:</b> ' + esc(d.observacion) + '</div>';
+  else if (e.txt === 'Vencido') msg = '<div class="doc-msg m-bad">Este documento ya venció. Sube uno con fecha más reciente.</div>';
+  else if (e.k === 'rev') msg = '<div class="doc-msg m-rev">Recibido. Lo está revisando un analista.</div>';
+  else if (e.k === 'ok' && d.observacion) msg = '<div class="doc-msg m-ok">' + esc(d.observacion) + '</div>';
+  else if (e.k === 'na' && d.observacion) msg = '<div class="doc-msg m-rev">' + esc(d.observacion) + '</div>';
+
+  return '<div class="doc ' + e.fila + '">' +
+    '<div>' +
+      '<div class="doc-nm">' + esc(d.documento) + (d.obligatorio ? '' : '<span class="op">Opcional</span>') + '</div>' +
+      (d.instrucciones ? '<div class="doc-ay">' + esc(d.instrucciones) + '</div>' : '') +
+      (meta.length ? '<div class="doc-meta">' + meta.map(function(m){ return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
+      msg +
+    '</div>' +
+    '<div class="doc-act">' +
+      '<span class="badge ' + e.badge + '">' + esc(e.txt) + '</span>' +
+      (e.accion ? '<button type="button" class="btn ' + (e.k === 'pend' ? 'btn-p' : 'btn-g') + ' btn-sm" data-subir="' + esc(d.idChecklist) + '">' + esc(e.accion) + '</button>' : '') +
+      (d.idArchivoVigente ? '<button type="button" class="btn btn-g btn-sm" data-ver="' + esc(d.idArchivoVigente) + '">Ver archivo</button>' : '') +
+    '</div></div>';
+}
+
+
+// ============================================================
+// SUBIR / REEMPLAZAR
+// ============================================================
+
+function abrirSubir(idChecklist){
+  var d = DOCS.exp.documentos.filter(function(x){ return x.idChecklist === idChecklist; })[0];
+  if (!d) return;
+  DOCS.subir = { doc: d, archivo: null };
+
+  $('suTit').textContent = d.documento;
+  $('suSub').textContent = d.persona + (d.instrucciones ? ' · ' + d.instrucciones : '');
+  $('suNombre').textContent = '';
+  $('suBox').classList.remove('has');
+  $('suFile').value = '';
+  $('suErr').textContent = '';
+  $('suErr').hidden = true;
+
+  $('suFecha').value = '';
+  $('suFecha').max = new Date().toISOString().slice(0, 10);
+  $('suFechaReq').hidden = !d.requiereVigencia;
+  $('suFechaHint').textContent = d.requiereVigencia
+    ? (d.vigenciaMeses ? 'Es la fecha que aparece en el documento. Debe tener menos de ' + d.vigenciaMeses + ' meses.' : 'Es la fecha que aparece en el documento.')
+    : 'Opcional. Es la fecha que aparece en el documento.';
+
+  ocupado($('suOk'), false);
+  $('ovSubir').classList.add('on');
+}
+
+function elegirArchivo(file){
+  var err = $('suErr');
+  err.hidden = true;
+  if (!file) return;
+  var ext = (file.name.split('.').length > 1 ? file.name.split('.').pop() : '').toLowerCase();
+  if (EXT_PERMITIDAS.indexOf(ext) === -1) {
+    DOCS.subir.archivo = null; $('suBox').classList.remove('has'); $('suNombre').textContent = '';
+    err.textContent = 'Ese tipo de archivo no se acepta. Usa PDF, JPG, PNG, XML o ZIP.'; err.hidden = false; return;
+  }
+  if (file.size > MAX_MB * 1024 * 1024) {
+    DOCS.subir.archivo = null; $('suBox').classList.remove('has'); $('suNombre').textContent = '';
+    err.textContent = 'El archivo pesa ' + (file.size / 1048576).toFixed(1) + ' MB; el máximo es ' + MAX_MB + ' MB.'; err.hidden = false; return;
+  }
+  DOCS.subir.archivo = file;
+  $('suBox').classList.add('has');
+  $('suNombre').textContent = file.name + ' · ' + (file.size / 1048576).toFixed(2) + ' MB';
+}
+
+function enviarSubir(){
+  var s = DOCS.subir, err = $('suErr');
+  err.hidden = true;
+  if (!s.archivo) { err.textContent = 'Elige el archivo que quieres subir.'; err.hidden = false; return; }
+  if (s.doc.requiereVigencia && !$('suFecha').value) { err.textContent = 'Indica la fecha del documento.'; err.hidden = false; return; }
+
+  var btn = $('suOk');
+  ocupado(btn, true, 'Subiendo…');
+
+  var lector = new FileReader();
+  lector.onerror = function(){ ocupado(btn, false); err.textContent = 'No se pudo leer el archivo.'; err.hidden = false; };
+  lector.onload = function(){
+    apiPortal('subirDocumento', {
+      idChecklist: s.doc.idChecklist,
+      nombreArchivo: s.archivo.name,
+      archivoBase64: String(lector.result),
+      fechaDocumento: $('suFecha').value
+    }).then(function(r){
+      ocupado(btn, false);
+      if (!r.ok) { err.textContent = r.mensaje; err.hidden = false; return; }
+      $('ovSubir').classList.remove('on');
+      toast('Documento recibido' + (r.datos.version > 1 ? ' (versión ' + r.datos.version + ')' : '') + '. Queda en revisión.');
+      recargarDocs();
+    });
+  };
+  lector.readAsDataURL(s.archivo);
+}
+
+
+// ============================================================
+// VER ARCHIVO
+// ============================================================
+
+function verArchivo(idArchivo, btn){
+  var ventana = window.open('', '_blank');   // se abre antes para que el navegador no la bloquee
+  if (ventana) ventana.document.write('<p style="font-family:Arial;padding:24px">Abriendo documento…</p>');
+  ocupado(btn, true, 'Abriendo…');
+
+  apiPortal('descargarArchivo', { idArchivo: idArchivo }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { if (ventana) ventana.close(); return toast(r.mensaje); }
+    var bin = atob(r.datos.archivoBase64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([bytes], { type: r.datos.tipoMime }));
+    if (ventana) ventana.location.href = url;
+    else {
+      var a = document.createElement('a');
+      a.href = url; a.download = r.datos.nombreArchivo; document.body.appendChild(a); a.click(); a.remove();
+    }
+  });
+}
+
+
+// ---------- modal de subida ----------
+$('suBox').addEventListener('click', function(){ $('suFile').click(); });
+$('suBox').addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('suFile').click(); } });
+$('suFile').addEventListener('change', function(){ elegirArchivo(this.files[0]); });
+['dragenter', 'dragover'].forEach(function(ev){
+  $('suBox').addEventListener(ev, function(e){ e.preventDefault(); $('suBox').classList.add('drag'); });
+});
+['dragleave', 'drop'].forEach(function(ev){
+  $('suBox').addEventListener(ev, function(e){ e.preventDefault(); $('suBox').classList.remove('drag'); });
+});
+$('suBox').addEventListener('drop', function(e){ if (e.dataTransfer.files && e.dataTransfer.files[0]) elegirArchivo(e.dataTransfer.files[0]); });
+$('suOk').addEventListener('click', enviarSubir);
+$('suCancel').addEventListener('click', function(){ $('ovSubir').classList.remove('on'); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && $('ovSubir').classList.contains('on')) $('ovSubir').classList.remove('on');
 });
 
 </script>
