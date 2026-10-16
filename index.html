@@ -528,7 +528,7 @@ tbody tr:last-child td{border-bottom:0}
 
 <div class="tabs"><div class="tabs-in" role="tablist">
   <button class="tab" role="tab" aria-selected="false" data-p="p-coord" data-roles="jefe,analista">Coordinación</button>
-  <button class="tab" role="tab" aria-selected="true"  data-p="p-datos" data-roles="cliente,analista">Datos de la empresa</button>
+  <button class="tab" role="tab" aria-selected="true"  data-p="p-datos" data-roles="cliente,jefe,analista">Datos de la solicitud</button>
   <button class="tab" role="tab" aria-selected="false" data-p="p-docs"  data-roles="cliente,jefe,analista">Documentos <span class="n" id="nDocs">0</span></button>
   <button class="tab" role="tab" aria-selected="false" data-p="p-linea" data-roles="cliente,jefe,analista">Línea de tiempo</button>
   <button class="tab" role="tab" aria-selected="false" data-p="p-exec"  data-roles="jefe,analista">Revisión <span class="n" id="nRev">0</span></button>
@@ -5627,6 +5627,17 @@ function convertirArchivoBase64(archivo) {
   <div class="mo-f"><button type="button" class="btn btn-g btn-sm" id="rvCerrar">Cerrar</button></div>
 </div></div>
 
+<!-- ============ KYC: datos de identificación de una persona ============ -->
+<div class="ov" id="ovKyc"><div class="mo mo-ancho" role="dialog" aria-modal="true" aria-labelledby="kyTit">
+  <div class="mo-h"><b id="kyTit">Datos de identificación</b><span id="kySub"></span></div>
+  <div class="mo-b" id="kyCuerpo"></div>
+  <p id="kyErr" class="acceso-error" role="alert" hidden style="padding:0 24px"></p>
+  <div class="mo-f">
+    <button type="button" class="btn btn-g" id="kyCancel">Cancelar</button>
+    <button type="button" class="btn btn-p" id="kyOk">Guardar datos</button>
+  </div>
+</div></div>
+
 <!-- ============ COORDINACIÓN: altas ============ -->
 <div class="ov" id="ovAlta"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="altaTit">
   <div class="mo-h"><b id="altaTit">Alta</b><span id="altaSub"></span></div>
@@ -6957,6 +6968,346 @@ $('rvMios').addEventListener('change', dibujarBandeja);
 $('rvCerrar').addEventListener('click', function(){ $('ovRev').classList.remove('on'); });
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && $('ovRev').classList.contains('on')) $('ovRev').classList.remove('on');
+});
+
+</script>
+
+<script>
+/* ============================================================
+   DATOS DE LA SOLICITUD Y KYC — Etapa KYC
+
+   - Pestaña "Datos de la solicitud": reemplaza al formulario de
+     demostración. Solo datos del crédito; se guarda en la matriz.
+   - KYC por persona: desde su grupo en Documentos ("Llenar datos").
+   - Los campos y reglas vienen de la API; aquí solo se dibujan.
+   ============================================================ */
+
+var SOL = { info: null, cargando: false, sucio: false };
+var RESUMEN = { datos: null, cargando: false };
+var KYCF = { info: null, idPersonalidad: null };
+
+
+// ============================================================
+// FORMULARIOS GENÉRICOS (a partir de la definición de la API)
+// ============================================================
+
+function valorCampo(v){
+  if (v === null || v === undefined) return '';
+  return String(v);
+}
+
+function campoHTML(f, valor, pre, bloqueado){
+  var id = pre + f.c;
+  var ancho = f.t === 'area' ? ' wide' : '';
+  var v = valorCampo(valor);
+  var dis = bloqueado ? ' disabled' : '';
+  var ctl;
+
+  switch (f.t) {
+    case 'area':
+      ctl = '<textarea id="' + id + '" rows="2"' + dis + '>' + esc(v) + '</textarea>'; break;
+    case 'lista':
+      ctl = '<select id="' + id + '"' + dis + '><option value="">Selecciona…</option>' +
+        f.ops.map(function(o){ return '<option' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>'; break;
+    case 'fecha':
+      ctl = '<input type="date" id="' + id + '" value="' + esc(v.slice(0, 10)) + '" max="' + new Date().toISOString().slice(0, 10) + '"' + dis + '>'; break;
+    case 'numero':
+      ctl = '<input id="' + id + '" inputmode="decimal" autocomplete="off" value="' + esc(v) + '" placeholder="0"' + dis + '>'; break;
+    case 'entero':
+      ctl = '<input id="' + id + '" inputmode="numeric" autocomplete="off" value="' + esc(v) + '" placeholder="0"' + dis + '>'; break;
+    case 'correo':
+      ctl = '<input type="email" id="' + id + '" autocomplete="off" value="' + esc(v) + '"' + dis + '>'; break;
+    case 'telefono':
+      ctl = '<input type="tel" id="' + id + '" autocomplete="off" value="' + esc(v) + '" placeholder="10 dígitos"' + dis + '>'; break;
+    case 'cp':
+      ctl = '<input id="' + id + '" inputmode="numeric" maxlength="5" autocomplete="off" value="' + esc(v) + '" oninput="this.value=this.value.replace(/\\D/g,\'\')"' + dis + '>'; break;
+    case 'digitos':
+      ctl = '<input id="' + id + '" inputmode="numeric" maxlength="' + (f.max || 30) + '" autocomplete="off" value="' + esc(v) + '" oninput="this.value=this.value.replace(/\\D/g,\'\')"' + dis + '>'; break;
+    case 'rfc':
+      ctl = '<input id="' + id + '" maxlength="13" autocomplete="off" style="text-transform:uppercase" value="' + esc(v) + '"' + dis + '>'; break;
+    case 'curp':
+      ctl = '<input id="' + id + '" maxlength="18" autocomplete="off" style="text-transform:uppercase" value="' + esc(v) + '"' + dis + '>'; break;
+    default:
+      ctl = '<input id="' + id + '" autocomplete="off" value="' + esc(v) + '"' + dis + '>';
+  }
+
+  return '<div class="f' + ancho + '" data-campo="' + esc(f.c) + '">' +
+    '<label for="' + id + '">' + esc(f.e) + (f.req ? ' <span class="req">*</span>' : '') + '</label>' + ctl +
+    (f.ayuda ? '<span class="hint">' + esc(f.ayuda) + '</span>' : '') + '</div>';
+}
+
+function formularioHTML(def, datos, pre, bloqueados){
+  var html = '', abierto = false;
+  def.forEach(function(f){
+    if (f.sec) {
+      if (abierto) html += '</div></div>';
+      html += '<div class="fsec"><div class="fsec-h"><b>' + esc(f.sec) + '</b></div><div class="fsec-b">';
+      abierto = true;
+      return;
+    }
+    html += campoHTML(f, datos[f.c], pre, bloqueados && bloqueados[f.c]);
+  });
+  if (abierto) html += '</div></div>';
+  return html;
+}
+
+function leerFormulario(def, pre){
+  var d = {};
+  def.forEach(function(f){
+    if (f.sec) return;
+    var el = $(pre + f.c);
+    if (el) d[f.c] = el.value.trim();
+  });
+  return d;
+}
+
+function aplicarVisibilidad(def, pre, cont){
+  var d = leerFormulario(def, pre);
+  def.forEach(function(f){
+    if (f.sec || !f.si) return;
+    var wrap = cont.querySelector('[data-campo="' + f.c + '"]');
+    if (!wrap) return;
+    var v = d[f.si.c] || '';
+    wrap.hidden = f.si.es !== undefined ? v !== f.si.es : v === f.si.no;
+  });
+}
+
+function ligarFormulario(def, pre, cont, alCambiar){
+  aplicarVisibilidad(def, pre, cont);
+  Array.prototype.forEach.call(cont.querySelectorAll('input,select,textarea'), function(el){
+    var f = function(){ aplicarVisibilidad(def, pre, cont); if (alCambiar) alCambiar(); };
+    el.addEventListener('input', f);
+    el.addEventListener('change', f);
+  });
+}
+
+function estadoCaptura(info, nombre){
+  var falt = info.faltantes || [];
+  var quien = info.version
+    ? 'Versión ' + info.version + ' · guardado por ' + esc(info.capturadoPor) + ' el ' + esc(fechaMx(info.fecha)) + '.'
+    : 'Todavía no se ha guardado nada.';
+  return '<div class="alerta' + (falt.length ? '' : ' ok') + '" style="margin-bottom:16px"><span class="alerta-ic">' + (falt.length ? '!' : '✓') + '</span><div>' +
+    (falt.length
+      ? '<b>Faltan ' + falt.length + ' dato(s) obligatorio(s)' + (nombre ? ' de ' + esc(nombre) : '') + ':</b> ' + esc(falt.slice(0, 6).join(', ')) + (falt.length > 6 ? '…' : '') + '.'
+      : '<b>Datos completos' + (nombre ? ' de ' + esc(nombre) : '') + '.</b>') +
+    ' <span style="opacity:.8">' + quien + '</span></div></div>';
+}
+
+
+// ============================================================
+// PESTAÑA "DATOS DE LA SOLICITUD"
+// ============================================================
+
+function prepararSolicitud(){
+  if ($('solConectada')) return;
+  var panel = $('p-datos');
+  Array.prototype.forEach.call(panel.children, function(el){ el.hidden = true; });
+  var cont = document.createElement('div');
+  cont.id = 'solConectada';
+  panel.appendChild(cont);
+}
+
+function pintarSolicitud(){
+  if (!SESION || !CREDITO_ACTIVO) return;
+  prepararSolicitud();
+  if (!SOL.info && !SOL.cargando) cargarSolicitud();
+}
+
+function cargarSolicitud(){
+  SOL.cargando = true;
+  $('solConectada').innerHTML = '<p class="vacio">Cargando los datos de tu solicitud…</p>';
+  return apiPortal('verSolicitud', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    SOL.cargando = false;
+    if (!r.ok) { $('solConectada').innerHTML = '<div class="alerta"><span class="alerta-ic">!</span><div>' + esc(r.mensaje) + '</div></div>'; return; }
+    SOL.info = r.datos;
+    SOL.sucio = false;
+    dibujarSolicitud();
+    pintarEncabezadoConectado();
+  });
+}
+
+function dibujarSolicitud(){
+  var i = SOL.info, interno = esInternoPortal();
+  $('solConectada').innerHTML =
+    '<div class="intro"><h1>' + (interno ? 'Datos de la solicitud.' : 'Cuéntanos de tu crédito.') + '</h1>' +
+    '<p>' + (interno
+      ? 'Lo que capturó el cliente sobre este crédito. Puedes corregirlo; cada cambio queda registrado.'
+      : 'Estos datos son de este crédito en particular. Los datos de cada persona (domicilio, CURP, etc.) se llenan en la pestaña Documentos, en el grupo de cada una.') + '</p></div>' +
+    estadoCaptura(i, '') +
+    formularioHTML(i.definicion, i.datos, 'so_') +
+    '<div class="cc-barra"><button type="button" class="btn btn-p" id="soGuardar">Guardar</button>' +
+    '<span class="gc-nota" id="soEstado"></span></div>';
+
+  ligarFormulario(i.definicion, 'so_', $('solConectada'), function(){
+    SOL.sucio = true;
+    $('soEstado').textContent = 'Tienes cambios sin guardar.';
+  });
+  $('soGuardar').onclick = guardarSolicitudPortal;
+}
+
+function guardarSolicitudPortal(){
+  var btn = $('soGuardar');
+  ocupado(btn, true);
+  apiPortal('guardarSolicitud', {
+    idCredito: CREDITO_ACTIVO.idCredito,
+    datos: leerFormulario(SOL.info.definicion, 'so_')
+  }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { $('soEstado').textContent = ''; return toast(r.mensaje); }
+    toast(r.datos.sinCambios ? 'No había cambios que guardar.'
+      : (r.datos.faltantes.length ? 'Guardado. Aún faltan ' + r.datos.faltantes.length + ' dato(s) obligatorio(s).' : 'Guardado. Datos de la solicitud completos.'));
+    SOL.info = null;
+    RESUMEN.datos = null;
+    cargarSolicitud();
+  });
+}
+
+function pintarEncabezadoConectado(){
+  if (!CREDITO_ACTIVO) return;
+  $('opNombre').textContent = CREDITO_ACTIVO.cliente;
+  var m = SOL.info && SOL.info.datos ? Number(SOL.info.datos.monto) : 0;
+  var p = SOL.info && SOL.info.datos ? SOL.info.datos.plazo : '';
+  $('opDet').textContent = (m ? '$' + m.toLocaleString('es-MX') : 'Monto por definir') + (p ? ' · ' + p + ' meses' : '');
+}
+
+// El formulario de demostración ya no define el encabezado
+var condicionalesDemo = condicionales;
+condicionales = function(){
+  try { condicionalesDemo(); } catch(e){}
+  pintarEncabezadoConectado();
+};
+
+// Al entrar a un crédito, cargar sus datos
+var entrarCreditoBase = entrarCredito;
+entrarCredito = function(c){
+  entrarCreditoBase(c);
+  pintarSolicitud();
+};
+
+// Avisar si se intenta salir con cambios sin guardar
+window.addEventListener('beforeunload', function(e){
+  if (SOL.sucio) { e.preventDefault(); e.returnValue = ''; }
+});
+
+
+// ============================================================
+// KYC EN DOCUMENTOS (barra en cada persona)
+// ============================================================
+
+function cargarResumen(){
+  if (RESUMEN.cargando || !CREDITO_ACTIVO) return;
+  RESUMEN.cargando = true;
+  apiPortal('resumenDatos', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    RESUMEN.cargando = false;
+    RESUMEN.datos = r.ok ? r.datos : { solicitud: {}, personas: {} };
+    if (DOCS.exp && !$('p-docs').hidden) dibujarDocs();
+  });
+}
+
+var dibujarDocsSinKyc = dibujarDocs;
+dibujarDocs = function(){
+  dibujarDocsSinKyc();
+  if (!RESUMEN.datos) return cargarResumen();
+
+  var res = RESUMEN.datos;
+  var pendientes = 0;
+
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('.grp'), function(g){
+    var id = g.querySelector('[data-grp]').getAttribute('data-grp');
+    var p = res.personas[id] || { capturado: false, faltantes: 1 };
+    var completo = p.capturado && !p.faltantes;
+    if (!completo) pendientes++;
+
+    var barra = document.createElement('div');
+    barra.className = 'doc' + (completo ? '' : ' st-bad');
+    barra.innerHTML =
+      '<div><div class="doc-nm">Datos de identificación</div>' +
+      '<div class="doc-ay">' + (completo
+        ? 'Domicilio, contacto y datos fiscales capturados.'
+        : (p.capturado ? 'Faltan ' + p.faltantes + ' dato(s) obligatorio(s).' : 'Todavía no se capturan: RFC, domicilio, contacto y datos de prevención de lavado de dinero.')) +
+      '</div></div>' +
+      '<div class="doc-act"><span class="badge ' + (completo ? 'b-ok' : 'b-pend') + '">' + (completo ? 'Completos' : 'Pendientes') + '</span>' +
+      '<button type="button" class="btn ' + (completo ? 'btn-g' : 'btn-p') + ' btn-sm" data-kyc="' + esc(id) + '">' + (completo ? 'Ver o editar' : 'Llenar datos') + '</button></div>';
+    var cuerpo = g.querySelector('.grp-b');
+    cuerpo.insertBefore(barra, cuerpo.firstChild);
+  });
+
+  if (pendientes || (res.solicitud && res.solicitud.faltantes)) {
+    var aviso = document.createElement('div');
+    aviso.className = 'alerta';
+    aviso.style.marginBottom = '16px';
+    aviso.innerHTML = '<span class="alerta-ic">!</span><div>' +
+      (pendientes ? 'Faltan los <b>datos de identificación de ' + pendientes + ' persona(s)</b>: usa “Llenar datos” en cada una. ' : '') +
+      (res.solicitud && res.solicitud.faltantes ? 'Faltan <b>' + res.solicitud.faltantes + ' dato(s) de la solicitud</b> en la pestaña “Datos de la solicitud”.' : '') +
+      '</div>';
+    var cont = $('docsConectados');
+    var primerGrupo = cont.querySelector('.grp');
+    if (primerGrupo) cont.insertBefore(aviso, primerGrupo);
+  }
+
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-kyc]'), function(b){
+    b.onclick = function(){ abrirKyc(b.getAttribute('data-kyc')); };
+  });
+};
+
+var recargarDocsSinKyc = recargarDocs;
+recargarDocs = function(){ RESUMEN.datos = null; return recargarDocsSinKyc(); };
+
+
+// ============================================================
+// VENTANA KYC
+// ============================================================
+
+function abrirKyc(idPersonalidad){
+  KYCF.idPersonalidad = idPersonalidad;
+  $('kyTit').textContent = 'Datos de identificación';
+  $('kySub').textContent = '';
+  $('kyCuerpo').innerHTML = '<p class="gc-nota">Cargando…</p>';
+  $('kyErr').hidden = true;
+  $('ovKyc').classList.add('on');
+
+  apiPortal('verKYC', { idPersonalidad: idPersonalidad }).then(function(r){
+    if (!r.ok) { $('kyCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    var i = KYCF.info = r.datos;
+    $('kyTit').textContent = i.persona.nombre;
+    $('kySub').textContent = (i.persona.tipoPersona === 'PM' ? 'Persona moral' : 'Persona física') + ' · ' + i.persona.idPersonalidad;
+    $('kyCuerpo').innerHTML =
+      estadoCaptura(i, '') +
+      '<p class="gc-nota">El nombre lo registró Factor GFC' + (i.persona.rfc ? ', igual que el RFC' : '') +
+      '. Si alguno tiene un error, avísale a tu ejecutivo.</p>' +
+      formularioHTML(i.definicion, i.datos, 'ky_', i.persona.rfc ? { RFC: true } : null);
+    ligarFormulario(i.definicion, 'ky_', $('kyCuerpo'));
+  });
+}
+
+function guardarKycPortal(){
+  var i = KYCF.info;
+  if (!i) return;
+  var btn = $('kyOk');
+  var datos = leerFormulario(i.definicion, 'ky_');
+  if (i.persona.rfc) datos.RFC = i.persona.rfc;
+  ocupado(btn, true);
+  $('kyErr').hidden = true;
+
+  apiPortal('guardarKYC', {
+    idPersonalidad: KYCF.idPersonalidad,
+    idCredito: CREDITO_ACTIVO ? CREDITO_ACTIVO.idCredito : '',
+    datos: datos
+  }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { $('kyErr').textContent = r.mensaje; $('kyErr').hidden = false; $('kyErr').scrollIntoView({ block: 'nearest' }); return; }
+    $('ovKyc').classList.remove('on');
+    toast(r.datos.sinCambios ? 'No había cambios que guardar.'
+      : (r.datos.faltantes.length ? 'Guardado. Aún faltan ' + r.datos.faltantes.length + ' dato(s) obligatorio(s).' : 'Guardado. Datos completos.'));
+    RESUMEN.datos = null;
+    if (DOCS.exp) dibujarDocs();
+  });
+}
+
+$('kyOk').addEventListener('click', guardarKycPortal);
+$('kyCancel').addEventListener('click', function(){ $('ovKyc').classList.remove('on'); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && $('ovKyc').classList.contains('on')) $('ovKyc').classList.remove('on');
 });
 
 </script>
