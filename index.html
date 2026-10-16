@@ -469,6 +469,8 @@ tbody tr:last-child td{border-bottom:0}
 .creditobar-in select{background:var(--surface);border:1px solid var(--accent-rule);border-radius:4px;padding:5px 8px;font-size:12.5px;max-width:100%;color:var(--ink)}
 .creditobar-in button{background:none;border:1px solid var(--accent-rule);color:var(--accent-ink);border-radius:4px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer}
 .gc-inv .sub{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.pt-tot{display:flex;flex-wrap:wrap;gap:6px 18px;background:var(--navy-soft);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:var(--ink-2);position:sticky;top:-24px;z-index:2}
+.pt-tot b{color:var(--navy);font-variant-numeric:tabular-nums}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -7428,9 +7430,14 @@ window.addEventListener('beforeunload', function(e){
 function cargarResumen(){
   if (RESUMEN.cargando || !CREDITO_ACTIVO) return;
   RESUMEN.cargando = true;
-  apiPortal('resumenDatos', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+  Promise.all([
+    apiPortal('resumenDatos', { idCredito: CREDITO_ACTIVO.idCredito }),
+    apiPortal('resumenPatrimonio', { idCredito: CREDITO_ACTIVO.idCredito })
+  ]).then(function(rs){
+    var r = rs[0];
     RESUMEN.cargando = false;
     RESUMEN.datos = r.ok ? r.datos : { solicitud: {}, personas: {} };
+    RESUMEN.datos.patrimonio = rs[1].ok && rs[1].datos ? rs[1].datos : {};
     if (DOCS.exp && !$('p-docs').hidden) dibujarDocs();
   });
 }
@@ -7468,6 +7475,22 @@ dibujarDocs = function(){
       '<button type="button" class="btn btn-g btn-sm" data-fmt="' + esc(id) + '" title="Abre sus formatos llenos con los datos capturados">Formatos</button></div>';
     var cuerpo = g.querySelector('.grp-b');
     cuerpo.insertBefore(barra, cuerpo.firstChild);
+
+    var pt = (res.patrimonio || {})[id];
+    if (pt && pt.requiere) {
+      var ptOk = pt.capturado && !pt.faltantes;
+      if (!ptOk) pendientes.push((per.nombre || id) + ' (situación patrimonial)');
+      var fila = document.createElement('div');
+      fila.className = 'doc' + (ptOk ? '' : ' st-bad');
+      fila.innerHTML =
+        '<div><div class="doc-nm">Situación patrimonial</div><div class="doc-ay">' +
+        (ptOk ? 'Balance, ingresos, gastos e inmuebles capturados.'
+          : (pt.capturado ? 'Faltan ' + pt.faltantes + ' dato(s).' : 'Todavía no se captura: lo que tiene, lo que debe, ingresos y gastos anuales e inmuebles.')) +
+        '</div></div>' +
+        '<div class="doc-act"><span class="badge ' + (ptOk ? 'b-ok' : 'b-pend') + '">' + (ptOk ? 'Completa' : 'Pendiente') + '</span>' +
+        '<button type="button" class="btn ' + (ptOk ? 'btn-g' : 'btn-p') + ' btn-sm" data-pat="' + esc(id) + '">' + (ptOk ? 'Ver o editar' : 'Llenar') + '</button></div>';
+      cuerpo.insertBefore(fila, barra.nextSibling);
+    }
   });
 
   if (pendientes.length || (res.solicitud && res.solicitud.faltantes)) {
@@ -7488,6 +7511,9 @@ dibujarDocs = function(){
   });
   Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-fmt]'), function(b){
     b.onclick = function(){ abrirFormatos(b.getAttribute('data-fmt'), b); };
+  });
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-pat]'), function(b){
+    b.onclick = function(){ abrirPatrimonio(b.getAttribute('data-pat')); };
   });
 };
 
@@ -7539,7 +7565,53 @@ recargarDocs = function(){ RESUMEN.datos = null; return recargarDocsSinKyc(); };
 // VENTANA KYC
 // ============================================================
 
+var PAT_ACT = ['efectivo','cuentasCobrar','documentosCobrar','hipotecasFideicomisos','inversionesAcciones','bienesMuebles','otrosActivos'];
+var PAT_PAS = ['cuentasPagar','documentosPagar','impuestosPagar','prestamosPagar','otrosPasivos'];
+var PAT_ING = ['sueldos','honorarios','dividendos','intereses','rentas','otrosIngresos'];
+var PAT_GAS = ['predial','impuestos','pagosHipotecarios','otrosPagos','seguros','manutencion','otrosGastos'];
+
+function numPat(v){ var n = Number(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isNaN(n) ? 0 : n; }
+
+function pintarTotalesPat(){
+  if (!KYCF.info || KYCF.modo !== 'pat' || !$('ptTot')) return;
+  var d = leerFormulario(KYCF.info.definicion, 'pt_');
+  var suma = function(l){ return l.reduce(function(a, c){ return a + numPat(d[c]); }, 0); };
+  var inm = (d.inmuebles || []).reduce(function(a, r){ return a + numPat(r.valor); }, 0);
+  var act = suma(PAT_ACT) + inm, pas = suma(PAT_PAS), ing = suma(PAT_ING), gas = suma(PAT_GAS);
+  var m = function(n){ return '$' + n.toLocaleString('es-MX', { maximumFractionDigits: 0 }); };
+  $('ptTot').innerHTML =
+    '<span>Activos <b>' + m(act) + '</b></span><span>Pasivos <b>' + m(pas) + '</b></span><span>Capital <b>' + m(act - pas) + '</b></span>' +
+    '<span>Ingresos <b>' + m(ing) + '</b></span><span>Gastos <b>' + m(gas) + '</b></span><span>Remanente anual <b>' + m(ing - gas) + '</b></span>';
+}
+
+function abrirPatrimonio(idPersonalidad){
+  KYCF.modo = 'pat';
+  KYCF.idPersonalidad = idPersonalidad;
+  $('kyTit').textContent = 'Situación patrimonial';
+  $('kySub').textContent = '';
+  $('kyCuerpo').innerHTML = '<p class="gc-nota">Cargando…</p>';
+  $('kyErr').hidden = true;
+  $('kyOk').textContent = 'Guardar situación patrimonial';
+  $('ovKyc').classList.add('on');
+
+  apiPortal('verPatrimonio', { idPersonalidad: idPersonalidad }).then(function(r){
+    if (!r.ok) { $('kyCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    var i = KYCF.info = r.datos;
+    $('kyTit').textContent = i.persona.nombre;
+    $('kySub').textContent = 'Situación patrimonial · ' + i.persona.idPersonalidad;
+    $('kyCuerpo').innerHTML =
+      estadoCaptura(i, '') +
+      '<p class="gc-nota">Cifras en pesos. Escribe 0 en lo que no aplique. Los totales se calculan solos.</p>' +
+      '<div class="pt-tot" id="ptTot"></div>' +
+      formularioHTML(i.definicion, i.datos, 'pt_');
+    ligarFormulario(i.definicion, 'pt_', $('kyCuerpo'), pintarTotalesPat);
+    pintarTotalesPat();
+  });
+}
+
 function abrirKyc(idPersonalidad){
+  KYCF.modo = 'kyc';
+  $('kyOk').textContent = 'Guardar datos';
   KYCF.idPersonalidad = idPersonalidad;
   $('kyTit').textContent = 'Datos';
   $('kySub').textContent = '';
@@ -7562,9 +7634,25 @@ function abrirKyc(idPersonalidad){
   });
 }
 
+function guardarPatrimonioPortal(){
+  var i = KYCF.info, btn = $('kyOk');
+  ocupado(btn, true);
+  $('kyErr').hidden = true;
+  apiPortal('guardarPatrimonio', { idPersonalidad: KYCF.idPersonalidad, datos: leerFormulario(i.definicion, 'pt_') }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { $('kyErr').textContent = r.mensaje; $('kyErr').hidden = false; $('kyErr').scrollIntoView({ block: 'nearest' }); return; }
+    $('ovKyc').classList.remove('on');
+    toast(r.datos.sinCambios ? 'No había cambios que guardar.'
+      : (r.datos.faltantes.length ? 'Guardado. Aún faltan ' + r.datos.faltantes.length + ' dato(s).' : 'Guardado. Situación patrimonial completa.'));
+    RESUMEN.datos = null;
+    if (DOCS.exp) dibujarDocs();
+  });
+}
+
 function guardarKycPortal(){
   var i = KYCF.info;
   if (!i) return;
+  if (KYCF.modo === 'pat') return guardarPatrimonioPortal();
   var btn = $('kyOk');
   var datos = leerFormulario(i.definicion, 'ky_');
   if (i.persona.rfc) datos.RFC = i.persona.rfc;
