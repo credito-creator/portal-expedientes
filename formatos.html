@@ -1050,7 +1050,7 @@
       <td style="width:22%"><span class="et c">Aval/ Obligado Solidario</span></td>
       <td style="width:6%;text-align:center"><span class="sn"><input type="radio" name="spTipo" id="spAval"><label class="bx grande" for="spAval"></label></span></td>
       <td style="width:20%"><span class="et c">Otro (Especificar )</span></td>
-      <td><input class="v"></td>
+      <td><input data-c="sp_otro" class="v"></td>
     </tr>
   </table>
 
@@ -1059,55 +1059,55 @@
     <table class="g" style="flex:1 1 50%">
       <colgroup><col style="width:56%"><col style="width:22%"><col style="width:22%"></colgroup>
       <tr><td class="barra" colspan="3">BALANCE PATRIMONIAL</td></tr>
-      <tr><td><span class="et">Fecha de Balance Patrimonial</span></td><td colspan="2"><input class="v"></td></tr>
+      <tr><td><span class="et">Fecha de Balance Patrimonial</span></td><td colspan="2"><input data-c="sp_fechaBalance" class="v"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">ACTIVOS</td></tr>
       <tr><td></td><td class="sub">Total</td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Efectivo</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Cuentas por cobrar</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Documentos por cobrar</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Hipotecas y fideicomisos</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Inversiones en Acciones</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Efectivo</span></td><td><input data-c="sp_efectivo" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Cuentas por cobrar</span></td><td><input data-c="sp_cuentasCobrar" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Documentos por cobrar</span></td><td><input data-c="sp_documentosCobrar" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Hipotecas y fideicomisos</span></td><td><input data-c="sp_hipotecasFideicomisos" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Inversiones en Acciones</span></td><td><input data-c="sp_inversionesAcciones" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
       <tr><td><span class="et">Bienes inmuebles (llenar detalle)</span></td><td><input class="v num money calc" data-total="inm" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Bienes Muebles</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Otros Activos</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Bienes Muebles</span></td><td><input data-c="sp_bienesMuebles" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Activos</span></td><td><input data-c="sp_otrosActivos" class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" style="text-align:left">TOTAL DE ACTIVOS</td><td><input class="v num money calc" data-total="act" data-extra="inm" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">PASIVOS</td></tr>
-      <tr><td><span class="et">Cuentas por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Documentos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Impuestos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Prestamos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Otros pasivos</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Cuentas por pagar</span></td><td><input data-c="sp_cuentasPagar" class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Documentos por pagar</span></td><td><input data-c="sp_documentosPagar" class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Impuestos por pagar</span></td><td><input data-c="sp_impuestosPagar" class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Prestamos por pagar</span></td><td><input data-c="sp_prestamosPagar" class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros pasivos</span></td><td><input data-c="sp_otrosPasivos" class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" style="text-align:left">TOTAL DE PASIVOS</td><td><input class="v num money calc" data-total="pas" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
       <tr><td class="sinborde" colspan="3" style="height:10px"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">CAPITAL</td></tr>
-      <tr><td><span class="et">Total de Activos menos Total de Pasivos</span></td><td colspan="2"><input class="v num money calc" data-resta="act-pas" readonly tabindex="-1"></td></tr>
+      <tr><td><span class="et">Total de Activos menos Total de Pasivos</span></td><td colspan="2"><input data-c="sp_capital" class="v num money calc" data-resta="act-pas" readonly tabindex="-1"></td></tr>
     </table>
 
     <table class="g" style="flex:1 1 50%">
       <colgroup><col style="width:56%"><col style="width:22%"><col style="width:22%"></colgroup>
       <tr><td class="barra" colspan="3">ESTADOS DE RESULTADOS</td></tr>
-      <tr><td><span class="et">Periodo del Estado de Resultados</span></td><td colspan="2"><input class="v"></td></tr>
+      <tr><td><span class="et">Periodo del Estado de Resultados</span></td><td colspan="2"><input data-c="sp_periodo" class="v"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">INGRESOS ANUALES</td></tr>
       <tr><td></td><td class="sub">Total</td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Sueldos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Honorarios</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Dividendos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Intereses</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Rentas</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Otros ingresos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Sueldos</span></td><td><input data-c="sp_sueldos" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Honorarios</span></td><td><input data-c="sp_honorarios" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Dividendos</span></td><td><input data-c="sp_dividendos" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Intereses</span></td><td><input data-c="sp_intereses" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Rentas</span></td><td><input data-c="sp_rentas" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros ingresos</span></td><td><input data-c="sp_otrosIngresos" class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
       <tr><td style="height:16px"></td><td></td><td class="sinborde"></td></tr>
       <tr><td class="sub" style="text-align:left">Ingresos Anuales Totales</td><td><input class="v num money calc" data-total="ing" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">GASTOS ANUALES</td></tr>
-      <tr><td><span class="et">Impuesto Predial</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Impuestos</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Pagos Prestamos Hip.</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Otros Pagos Programados</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Pagos de seguros</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Gastos de Manutención</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
-      <tr><td><span class="et">Otros Gastos</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Impuesto Predial</span></td><td><input data-c="sp_predial" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Impuestos</span></td><td><input data-c="sp_impuestos" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Pagos Prestamos Hip.</span></td><td><input data-c="sp_pagosHipotecarios" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Pagos Programados</span></td><td><input data-c="sp_otrosPagos" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Pagos de seguros</span></td><td><input data-c="sp_seguros" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Gastos de Manutención</span></td><td><input data-c="sp_manutencion" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Gastos</span></td><td><input data-c="sp_otrosGastos" class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" style="text-align:left">Gastos Anuales Totales</td><td><input class="v num money calc" data-total="gas" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
       <tr><td class="sub" colspan="3" style="text-align:left">INGRESO NETO ANUAL</td></tr>
-      <tr><td><span class="et">Ingresos Totales menos Gastos Anuales Totales</span></td><td colspan="2"><input class="v num money calc" data-resta="ing-gas" readonly tabindex="-1"></td></tr>
+      <tr><td><span class="et">Ingresos Totales menos Gastos Anuales Totales</span></td><td colspan="2"><input data-c="sp_remanente" class="v num money calc" data-resta="ing-gas" readonly tabindex="-1"></td></tr>
     </table>
 
   </div>
@@ -1123,11 +1123,11 @@
       <td class="enc"><span class="et c">Datos de registro</span></td>
       <td class="enc"><span class="et c">Valor</span></td>
     </tr>
-    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
-    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
-    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
-    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
-    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input data-c="sp_inm1Desc" class="v"></td><td><input data-c="sp_inm1Ubic" class="v"></td><td><input data-c="sp_inm1M2c" class="v num"></td><td><input data-c="sp_inm1M2t" class="v num"></td><td><input data-c="sp_inm1Reg" class="v"></td><td><input data-c="sp_inm1Valor" class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input data-c="sp_inm2Desc" class="v"></td><td><input data-c="sp_inm2Ubic" class="v"></td><td><input data-c="sp_inm2M2c" class="v num"></td><td><input data-c="sp_inm2M2t" class="v num"></td><td><input data-c="sp_inm2Reg" class="v"></td><td><input data-c="sp_inm2Valor" class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input data-c="sp_inm3Desc" class="v"></td><td><input data-c="sp_inm3Ubic" class="v"></td><td><input data-c="sp_inm3M2c" class="v num"></td><td><input data-c="sp_inm3M2t" class="v num"></td><td><input data-c="sp_inm3Reg" class="v"></td><td><input data-c="sp_inm3Valor" class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input data-c="sp_inm4Desc" class="v"></td><td><input data-c="sp_inm4Ubic" class="v"></td><td><input data-c="sp_inm4M2c" class="v num"></td><td><input data-c="sp_inm4M2t" class="v num"></td><td><input data-c="sp_inm4Reg" class="v"></td><td><input data-c="sp_inm4Valor" class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input data-c="sp_inm5Desc" class="v"></td><td><input data-c="sp_inm5Ubic" class="v"></td><td><input data-c="sp_inm5M2c" class="v num"></td><td><input data-c="sp_inm5M2t" class="v num"></td><td><input data-c="sp_inm5Reg" class="v"></td><td><input data-c="sp_inm5Valor" class="v num money" data-suma="inm"></td></tr>
     <tr><td class="sub" colspan="5" style="text-align:right">Total</td><td><input class="v num money calc" data-total="inm" readonly tabindex="-1"></td></tr>
   </table>
 
