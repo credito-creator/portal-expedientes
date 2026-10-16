@@ -7210,21 +7210,26 @@ dibujarDocs = function(){
   if (!RESUMEN.datos) return cargarResumen();
 
   var res = RESUMEN.datos;
-  var pendientes = 0;
+  var pendientes = [];
 
   Array.prototype.forEach.call($('docsConectados').querySelectorAll('.grp'), function(g){
     var id = g.querySelector('[data-grp]').getAttribute('data-grp');
     var p = res.personas[id] || { capturado: false, faltantes: 1 };
     var completo = p.capturado && !p.faltantes;
-    if (!completo) pendientes++;
+    var per = (DOCS.exp.personas || []).filter(function(x){ return x.idPersonalidad === id; })[0] || {};
+    var pm = per.tipoPersona === 'PM';
+    var titulo = pm ? 'Datos de la empresa' : 'Datos personales';
+    if (!completo) pendientes.push((per.nombre || id) + (pm ? ' (datos de la empresa)' : ' (datos personales)'));
 
     var barra = document.createElement('div');
     barra.className = 'doc' + (completo ? '' : ' st-bad');
     barra.innerHTML =
-      '<div><div class="doc-nm">Datos de identificación</div>' +
+      '<div><div class="doc-nm">' + titulo + '</div>' +
       '<div class="doc-ay">' + (completo
-        ? 'Domicilio, contacto y datos fiscales capturados.'
-        : (p.capturado ? 'Faltan ' + p.faltantes + ' dato(s) obligatorio(s).' : 'Todavía no se capturan: RFC, domicilio, contacto y datos de prevención de lavado de dinero.')) +
+        ? (pm ? 'Datos fiscales, representante legal, domicilio y contacto capturados.' : 'Datos fiscales, domicilio, contacto y preguntas de prevención capturados.')
+        : (p.capturado ? 'Faltan ' + p.faltantes + ' dato(s) obligatorio(s).'
+          : (pm ? 'Todavía no se capturan: RFC, fecha de constitución, giro, representante legal, domicilio fiscal y contacto.'
+                : 'Todavía no se capturan: RFC, CURP, domicilio, contacto y preguntas de prevención de lavado de dinero.'))) +
       '</div></div>' +
       '<div class="doc-act"><span class="badge ' + (completo ? 'b-ok' : 'b-pend') + '">' + (completo ? 'Completos' : 'Pendientes') + '</span>' +
       '<button type="button" class="btn ' + (completo ? 'btn-g' : 'btn-p') + ' btn-sm" data-kyc="' + esc(id) + '">' + (completo ? 'Ver o editar' : 'Llenar datos') + '</button></div>';
@@ -7232,12 +7237,12 @@ dibujarDocs = function(){
     cuerpo.insertBefore(barra, cuerpo.firstChild);
   });
 
-  if (pendientes || (res.solicitud && res.solicitud.faltantes)) {
+  if (pendientes.length || (res.solicitud && res.solicitud.faltantes)) {
     var aviso = document.createElement('div');
     aviso.className = 'alerta';
     aviso.style.marginBottom = '16px';
     aviso.innerHTML = '<span class="alerta-ic">!</span><div>' +
-      (pendientes ? 'Faltan los <b>datos de identificación de ' + pendientes + ' persona(s)</b>: usa “Llenar datos” en cada una. ' : '') +
+      (pendientes.length ? 'Faltan datos de: <b>' + esc(pendientes.join(', ')) + '</b>. Usa “Llenar datos” en cada uno. ' : '') +
       (res.solicitud && res.solicitud.faltantes ? 'Faltan <b>' + res.solicitud.faltantes + ' dato(s) de la solicitud</b> en la pestaña “Datos de la solicitud”.' : '') +
       '</div>';
     var cont = $('docsConectados');
@@ -7260,7 +7265,7 @@ recargarDocs = function(){ RESUMEN.datos = null; return recargarDocsSinKyc(); };
 
 function abrirKyc(idPersonalidad){
   KYCF.idPersonalidad = idPersonalidad;
-  $('kyTit').textContent = 'Datos de identificación';
+  $('kyTit').textContent = 'Datos';
   $('kySub').textContent = '';
   $('kyCuerpo').innerHTML = '<p class="gc-nota">Cargando…</p>';
   $('kyErr').hidden = true;
@@ -7270,7 +7275,7 @@ function abrirKyc(idPersonalidad){
     if (!r.ok) { $('kyCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
     var i = KYCF.info = r.datos;
     $('kyTit').textContent = i.persona.nombre;
-    $('kySub').textContent = (i.persona.tipoPersona === 'PM' ? 'Persona moral' : 'Persona física') + ' · ' + i.persona.idPersonalidad;
+    $('kySub').textContent = (i.persona.tipoPersona === 'PM' ? 'Datos de la empresa · persona moral' : 'Datos personales · persona física') + ' · ' + i.persona.idPersonalidad;
     $('kyCuerpo').innerHTML =
       estadoCaptura(i, '') +
       '<p class="gc-nota">El nombre lo registró Factor GFC' + (i.persona.rfc ? ', igual que el RFC' : '') +
