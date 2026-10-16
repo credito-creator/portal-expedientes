@@ -7232,7 +7232,8 @@ dibujarDocs = function(){
                 : 'Todavía no se capturan: RFC, CURP, domicilio, contacto y preguntas de prevención de lavado de dinero.'))) +
       '</div></div>' +
       '<div class="doc-act"><span class="badge ' + (completo ? 'b-ok' : 'b-pend') + '">' + (completo ? 'Completos' : 'Pendientes') + '</span>' +
-      '<button type="button" class="btn ' + (completo ? 'btn-g' : 'btn-p') + ' btn-sm" data-kyc="' + esc(id) + '">' + (completo ? 'Ver o editar' : 'Llenar datos') + '</button></div>';
+      '<button type="button" class="btn ' + (completo ? 'btn-g' : 'btn-p') + ' btn-sm" data-kyc="' + esc(id) + '">' + (completo ? 'Ver o editar' : 'Llenar datos') + '</button>' +
+      '<button type="button" class="btn btn-g btn-sm" data-fmt="' + esc(id) + '" title="Abre sus formatos llenos con los datos capturados">Formatos</button></div>';
     var cuerpo = g.querySelector('.grp-b');
     cuerpo.insertBefore(barra, cuerpo.firstChild);
   });
@@ -7253,7 +7254,50 @@ dibujarDocs = function(){
   Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-kyc]'), function(b){
     b.onclick = function(){ abrirKyc(b.getAttribute('data-kyc')); };
   });
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-fmt]'), function(b){
+    b.onclick = function(){ abrirFormatos(b.getAttribute('data-fmt'), b); };
+  });
 };
+
+
+// ============================================================
+// FORMATOS: abre formatos.html con el paquete de UNA persona
+// ============================================================
+
+var PREFIJO_PKG = 'portal_factor_pkg_';
+
+function abrirFormatos(idPersonalidad, btn){
+  var ventana = window.open('', '_blank');   // antes de esperar, para que el navegador no la bloquee
+  if (ventana) ventana.document.write('<p style="font-family:Arial;padding:24px">Preparando formatos…</p>');
+  ocupado(btn, true, 'Preparando…');
+
+  apiPortal('paqueteFormatos', { idCredito: CREDITO_ACTIVO.idCredito, idPersonalidad: idPersonalidad }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { if (ventana) ventana.close(); return toast(r.mensaje); }
+    var clave = PREFIJO_PKG + Date.now();
+    try {
+      localStorage.setItem(clave, JSON.stringify(Object.assign({ __creado: Date.now() }, r.datos.datos)));
+    } catch(e) {
+      if (ventana) ventana.close();
+      return toast('No se pudieron preparar los formatos en este navegador.');
+    }
+    var url = 'formatos.html?pkg=' + encodeURIComponent(clave) + '#' + r.datos.paquete;
+    if (ventana) ventana.location.href = url; else location.href = url;
+  });
+}
+
+// Los paquetes contienen datos personales: se borran del navegador después de 12 horas
+(function limpiarPaquetesViejos(){
+  try {
+    var limite = Date.now() - 12 * 3600 * 1000;
+    Object.keys(localStorage).forEach(function(k){
+      if (k.indexOf(PREFIJO_PKG) !== 0) return;
+      var n = Number(k.slice(PREFIJO_PKG.length));
+      if (!n || n < limite) localStorage.removeItem(k);
+    });
+    localStorage.removeItem('portal_factor_paquete');   // paquete del portal de demostración
+  } catch(e){}
+})();
 
 var recargarDocsSinKyc = recargarDocs;
 recargarDocs = function(){ RESUMEN.datos = null; return recargarDocsSinKyc(); };
