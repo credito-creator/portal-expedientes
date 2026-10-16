@@ -7230,6 +7230,7 @@ dibujarDocs = function(){
         : (p.capturado ? 'Faltan ' + p.faltantes + ' dato(s) obligatorio(s).'
           : (pm ? 'Todavía no se capturan: RFC, fecha de constitución, giro, representante legal, domicilio fiscal y contacto.'
                 : 'Todavía no se capturan: RFC, CURP, domicilio, contacto y preguntas de prevención de lavado de dinero.'))) +
+      (p.requiereKyc === false ? ' <span style="opacity:.75">Por su rol no se le pide el cuestionario de prevención de lavado de dinero.</span>' : '') +
       '</div></div>' +
       '<div class="doc-act"><span class="badge ' + (completo ? 'b-ok' : 'b-pend') + '">' + (completo ? 'Completos' : 'Pendientes') + '</span>' +
       '<button type="button" class="btn ' + (completo ? 'btn-g' : 'btn-p') + ' btn-sm" data-kyc="' + esc(id) + '">' + (completo ? 'Ver o editar' : 'Llenar datos') + '</button>' +
@@ -7323,7 +7324,8 @@ function abrirKyc(idPersonalidad){
     $('kyCuerpo').innerHTML =
       estadoCaptura(i, '') +
       '<p class="gc-nota">El nombre lo registró Factor GFC' + (i.persona.rfc ? ', igual que el RFC' : '') +
-      '. Si alguno tiene un error, avísale a tu ejecutivo.</p>' +
+      '. Si alguno tiene un error, avísale a tu ejecutivo.' +
+      (i.requiereKyc === false ? ' Por su rol en el crédito no se le pide el cuestionario de prevención de lavado de dinero.' : '') + '</p>' +
       formularioHTML(i.definicion, i.datos, 'ky_', i.persona.rfc ? { RFC: true } : null);
     ligarFormulario(i.definicion, 'ky_', $('kyCuerpo'));
   });
