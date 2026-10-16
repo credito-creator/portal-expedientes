@@ -463,6 +463,12 @@ tbody tr:last-child td{border-bottom:0}
 .tb-t td{padding:4px 4px;border-bottom:1px solid var(--line-2)}
 .tb-t input{width:100%;min-width:90px;background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:13px}
 .tb-quitar{background:none;border:none;color:var(--bad);font-size:16px;cursor:pointer;padding:0 6px}
+.creditobar{background:var(--accent-soft);border-bottom:1px solid var(--accent-rule);font-family:var(--sans);font-size:12.5px;color:var(--accent-ink)}
+.creditobar-in{max-width:1080px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.creditobar-in .esp{margin-left:auto}
+.creditobar-in select{background:var(--surface);border:1px solid var(--accent-rule);border-radius:4px;padding:5px 8px;font-size:12.5px;max-width:100%;color:var(--ink)}
+.creditobar-in button{background:none;border:1px solid var(--accent-rule);color:var(--accent-ink);border-radius:4px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer}
+.gc-inv .sub{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -517,6 +523,7 @@ tbody tr:last-child td{border-bottom:0}
   <button type="button" id="btnCambiarCredito" onclick="cambiarCreditoPortal()">Cambiar crédito</button>
   <button type="button" onclick="cerrarSesionPortal()">Cerrar sesión</button>
 </div></div>
+<div class="creditobar" hidden><div class="creditobar-in" id="barraCredito"></div></div>
 
 <div class="simbar"><div class="simbar-in">
   <span class="sim-lbl">Simulación · estás viendo la plataforma como</span>
@@ -5697,6 +5704,21 @@ var ROL_PORTAL = {
 
 var CLAVE_SESION = 'portal_factor_sesion';
 var CLAVE_ELEGIR = 'portal_factor_elegir_credito';
+var CLAVE_ABRIR = 'portal_factor_abrir_credito';    // crédito que el personal pidió abrir
+var CLAVE_PESTANA = 'portal_factor_pestana';        // pestaña con la que se abre
+var CREDITOS_VISIBLES = [];
+
+// Abre un crédito (personal interno): recarga en ese crédito, en la pestaña indicada
+function abrirCreditoPortal(idCredito, pestana){
+  sessionStorage.setItem(CLAVE_ABRIR, idCredito);
+  sessionStorage.setItem(CLAVE_PESTANA, pestana || 'p-docs');
+  location.reload();
+}
+function volverACartera(){
+  sessionStorage.removeItem(CLAVE_ABRIR);
+  sessionStorage.setItem(CLAVE_PESTANA, 'p-coord');
+  location.reload();
+}
 
 
 // ---------- llamada única a la API ----------
@@ -5713,8 +5735,21 @@ function apiPortal(accion, datos, intento){
       return new Promise(function(listo){ setTimeout(listo, 800 * (intento + 1)); })
         .then(function(){ return apiPortal(accion, datos, intento + 1); });
     }
+    if (falloRed && accion !== 'reportarError') reportarErrorPortal('consulta ' + accion, r.mensaje + (intento ? ' (tras ' + intento + ' reintentos)' : ''));
     return r;
   });
+}
+
+// Deja constancia del error en la Bitácora (Acción = errorPortal) para poder revisarlo después
+function reportarErrorPortal(donde, mensaje){
+  try {
+    if (!SESION) return;
+    apiPortalUnaVez('reportarError', {
+      donde: String(donde || '').slice(0, 80),
+      mensaje: String(mensaje || '').slice(0, 400) + ' · ' + navigator.userAgent.slice(0, 80),
+      idCredito: CREDITO_ACTIVO ? CREDITO_ACTIVO.idCredito : ''
+    });
+  } catch(e){}
 }
 
 function apiPortalUnaVez(accion, datos){
@@ -5834,8 +5869,16 @@ function elegirCredito(creditos, errorInvitacion){
   var u = SESION.usuario;
   var interno = u.rol !== 'Cliente';
 
-  // El personal interno sin créditos entra directo a la cartera para dar de alta el primero
-  if (!creditos.length && interno) return entrarSinCredito();
+  CREDITOS_VISIBLES = creditos;
+
+  // Personal interno: entra a la cartera, salvo que haya pedido abrir un crédito
+  if (interno) {
+    var pedido = sessionStorage.getItem(CLAVE_ABRIR);
+    sessionStorage.removeItem(CLAVE_ABRIR);
+    sessionStorage.removeItem(CLAVE_ELEGIR);
+    var elegido = creditos.filter(function(c){ return c.idCredito === pedido; })[0];
+    return elegido ? entrarCredito(elegido) : entrarSinCredito();
+  }
 
   if (!creditos.length) {
     acceso('Hola, ' + (u.nombre || u.email),
@@ -5903,6 +5946,33 @@ function entrarCredito(c){
     var lbl = sim.querySelector('.sim-lbl'); if (lbl) lbl.textContent = 'Herramientas de prueba';
   }
 
+  // Barra del crédito abierto (solo personal)
+  if (u.rol !== 'Cliente') {
+    var opciones = CREDITOS_VISIBLES.map(function(x){
+      return '<option value="' + esc(x.idCredito) + '"' + (x.idCredito === c.idCredito ? ' selected' : '') + '>' +
+        esc(x.idCredito + ' · ' + x.cliente + ' · ' + x.nombre) + '</option>';
+    }).join('');
+    $('barraCredito').innerHTML =
+      '<span>Crédito abierto:</span>' +
+      '<select id="selCredito" aria-label="Cambiar de crédito">' + opciones + '</select>' +
+      '<span class="esp"></span>' +
+      '<button type="button" id="btnVolverCartera">← Volver a la cartera</button>';
+    $('barraCredito').parentNode.hidden = false;
+    $('selCredito').onchange = function(){
+      var actual = document.querySelector('.tab[aria-selected="true"]');
+      abrirCreditoPortal(this.value, actual ? actual.getAttribute('data-p') : 'p-docs');
+    };
+    $('btnVolverCartera').onclick = volverACartera;
+    $('btnCambiarCredito').hidden = true;
+  }
+
+  var pestana = sessionStorage.getItem(CLAVE_PESTANA);
+  sessionStorage.removeItem(CLAVE_PESTANA);
+  if (pestana && $(pestana)) {
+    var tab = document.querySelector('.tab[data-p="' + pestana + '"]');
+    if (tab && !tab.hidden) irTab(pestana);
+  }
+
   $('acceso').hidden = true;
 }
 
@@ -5927,6 +5997,11 @@ function entrarSinCredito(){
   $('sesionUsuario').textContent = (u.nombre || u.email) + ' · ' + u.email + ' · ' + u.rol;
   $('sesionbar').hidden = false;
   var sim = document.querySelector('.simbar'); if (sim) sim.hidden = true;
+  $('btnCambiarCredito').hidden = true;
+
+  var pestana = sessionStorage.getItem(CLAVE_PESTANA);
+  sessionStorage.removeItem(CLAVE_PESTANA);
+  if (pestana === 'p-exec') irTab('p-exec');
 
   $('acceso').hidden = true;
 }
@@ -5946,11 +6021,13 @@ function cerrarSesionPortal(){
 }
 
 window.addEventListener('error', function(e){
-  try { toast('Ocurrió un error en el portal: ' + (e.message || 'desconocido') + '. Si se repite, avisa a Factor GFC.'); } catch(x){}
+  try { toast('Ocurrió un error en el portal: ' + (e.message || 'desconocido') + '. Ya quedó registrado.'); } catch(x){}
+  reportarErrorPortal('error general', (e.message || '') + ' @ ' + (e.filename || '') + ':' + (e.lineno || ''));
 });
 window.addEventListener('unhandledrejection', function(e){
-  try { toast('Ocurrió un error en el portal: ' + ((e.reason && e.reason.message) || 'desconocido') + '.'); } catch(x){}
+  try { toast('Ocurrió un error en el portal: ' + ((e.reason && e.reason.message) || 'desconocido') + '. Ya quedó registrado.'); } catch(x){}
   console.error(e.reason);
+  reportarErrorPortal('promesa sin atender', (e.reason && (e.reason.stack || e.reason.message)) || String(e.reason));
 });
 
 arrancarConexion();
@@ -6093,10 +6170,7 @@ function dibujarCartera(){
     b.addEventListener('click', function(){ abrirGestion(b.getAttribute('data-gestionar')); });
   });
   Array.prototype.forEach.call($('ccBody').querySelectorAll('[data-abrir]'), function(b){
-    b.addEventListener('click', function(){
-      try { localStorage.setItem(KEY_CREDITO_ACTUAL, b.getAttribute('data-abrir')); } catch(e){}
-      location.reload();
-    });
+    b.addEventListener('click', function(){ abrirCreditoPortal(b.getAttribute('data-abrir'), 'p-docs'); });
   });
 }
 
@@ -6228,8 +6302,9 @@ function recargarGestion(liga){
       dibujarGestion(liga);
     } catch (err) {
       console.error('Error al dibujar Gestionar:', err);
+      reportarErrorPortal('Gestionar ' + op.idCredito, err && err.stack ? err.stack : String(err));
       $('gcCuerpo').innerHTML = '<p class="acceso-error">No se pudo mostrar esta ventana: ' + esc(err && err.message ? err.message : String(err)) +
-        '.<br>Manda una captura de este mensaje a quien administra el portal.</p>';
+        '.<br>Ya quedó registrado. Cierra y vuelve a intentar.</p>';
     }
   });
 }
@@ -6257,7 +6332,9 @@ function dibujarGestion(liga){
       opciones(cat.tiposPersona.map(function(t){ return { v:t, t: t === 'PM' ? 'Persona moral' : 'Persona física' }; }), 'PF') + '</select></div>' +
     '<div class="f"><label>RFC</label><input id="npRfc" maxlength="13" autocomplete="off" style="text-transform:uppercase"></div>' +
     '<div class="f wide"><label>Pertenece a (estructura accionaria)</label><select id="npPadre">' +
-      opciones(g.personas.map(function(p){ return { v:p.idPersonalidad, t:p.idPersonalidad + ' · ' + p.nombre }; }), '', 'No aplica') + '</select></div>' +
+      opciones(g.personas.filter(function(p){ return p.tipoPersona === 'PM'; })
+        .map(function(p){ return { v:p.idPersonalidad, t:p.idPersonalidad + ' · ' + p.nombre }; }), '', 'No aplica (o accionista directo del acreditado)') + '</select>' +
+      '<span class="hint">Solo empresas: una persona física no tiene accionistas.</span></div>' +
     '</div><div class="gc-fila" style="margin-top:10px"><button type="button" class="btn btn-p btn-sm" id="gcGuardarPersona">Guardar persona</button></div></div>';
 
   html += g.personas.length
@@ -6340,13 +6417,25 @@ function seccionEstructura(g){
   var otros = e.personas.filter(function(p){ return p.idPersonalidad !== e.acreditado; });
   if (!otros.length) html += '<p class="gc-nota">El cliente no tiene más personas registradas. Agrega a los accionistas con “+ Nueva persona”.</p>';
 
+  var tipoDe = {};
+  e.personas.forEach(function(p){ tipoDe[p.idPersonalidad] = p.tipoPersona; });
+
   otros.forEach(function(p){
     var aviso = p.controlador && !enCredito[p.idPersonalidad]
       ? '<span class="sub" style="color:var(--bad)">Asígnale un rol en este crédito (por ejemplo Accionistas PF) para pedirle sus datos y documentos.</span>' : '';
-    html += '<div class="gc-persona"><div><b>' + esc(p.nombre) + '</b><small>' + esc(p.idPersonalidad + ' · ' + p.tipoPersona +
-        ' · accionista de ' + (p.perteneceA ? (nombreDe[p.perteneceA] || p.perteneceA) : acred.nombre)) + '</small>' +
+    if (p.perteneceA && tipoDe[p.perteneceA] === 'PF') {
+      aviso += '<span class="sub" style="color:var(--bad)">Aparece como accionista de una persona física. Corrige “Pertenece a” y guarda.</span>';
+    }
+    var padreActual = (!p.perteneceA || p.perteneceA === e.acreditado) ? '' : p.perteneceA;
+    var empresas = e.personas.filter(function(q){ return q.tipoPersona === 'PM' && q.idPersonalidad !== p.idPersonalidad && q.idPersonalidad !== e.acreditado; });
+    var selPadre = '<select data-padre="' + esc(p.idPersonalidad) + '" title="¿De qué empresa es accionista?" style="max-width:190px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--ground)">' +
+      '<option value="">De ' + esc(acred.nombre) + ' (acreditado)</option>' +
+      empresas.map(function(q){ return '<option value="' + esc(q.idPersonalidad) + '"' + (q.idPersonalidad === padreActual ? ' selected' : '') + '>De ' + esc(q.nombre) + '</option>'; }).join('') +
+      (padreActual && tipoDe[padreActual] === 'PF' ? '<option value="' + esc(padreActual) + '" selected>De ' + esc(nombreDe[padreActual]) + ' (persona física: corregir)</option>' : '') +
+      '</select>';
+    html += '<div class="gc-persona"><div><b>' + esc(p.nombre) + '</b><small>' + esc(p.idPersonalidad + ' · ' + p.tipoPersona) + '</small>' +
         (p.controlador ? ' <span class="chip c-ok">Controlador · ' + esc(String(p.efectiva)) + '% efectivo</span>' : '') + aviso + '</div>' +
-      '<div class="gc-fila" style="flex-wrap:nowrap;align-items:center">' +
+      '<div class="gc-fila" style="flex-wrap:wrap;align-items:center;justify-content:flex-end">' + selPadre +
         '<input data-pct="' + esc(p.idPersonalidad) + '" value="' + esc(p.porcentaje === '' ? '' : String(p.porcentaje)) + '" placeholder="%" inputmode="decimal" style="width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--ground)">' +
         '<label class="gc-conds" style="font-size:12.5px"><span><input type="checkbox" data-ctl="' + esc(p.idPersonalidad) + '"' + (p.ejerceControl ? ' checked' : '') + '> Ejerce control</span></label>' +
         '<button type="button" class="gc-link" data-guardar-ctl="' + esc(p.idPersonalidad) + '">Guardar</button>' +
@@ -6411,8 +6500,9 @@ function ligarGestion(){
       var id = b.getAttribute('data-guardar-ctl');
       var pct = $('gcCuerpo').querySelector('[data-pct="' + id + '"]').value.trim();
       var ctl = $('gcCuerpo').querySelector('[data-ctl="' + id + '"]').checked;
+      var padre = $('gcCuerpo').querySelector('[data-padre="' + id + '"]').value;
       ocupado(b, true, 'Guardando…');
-      apiPortal('definirControl', { idPersonalidad: id, porcentaje: pct, ejerceControl: ctl })
+      apiPortal('definirControl', { idPersonalidad: id, porcentaje: pct, ejerceControl: ctl, perteneceA: padre })
         .then(tras(null, function(){ return 'Participación y control guardados.'; }));
     };
   });
