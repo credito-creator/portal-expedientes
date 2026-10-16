@@ -6184,6 +6184,7 @@ function recargarGestion(liga){
     apiPortal('verExpediente', { idCredito: op.idCredito }),
     apiPortal('listarPersonalidades', { idCliente: op.idCliente })
   ];
+  pedidos.push(apiPortal('estructuraCliente', { idCliente: op.idCliente, idCredito: op.idCredito }));
   if (puedeAltas()) pedidos.push(apiPortal('listarInvitaciones', { idCliente: op.idCliente }));
 
   Promise.all(pedidos).then(function(rs){
@@ -6191,7 +6192,8 @@ function recargarGestion(liga){
     if (malo) { $('gcCuerpo').innerHTML = '<p class="acceso-error">' + esc(malo.mensaje) + '</p>'; return; }
     COORD.gestion.exp = rs[0].datos;
     COORD.gestion.personas = rs[1].datos;
-    COORD.gestion.invitaciones = rs[2] ? rs[2].datos.filter(function(i){
+    COORD.gestion.estructura = rs[2].datos;
+    COORD.gestion.invitaciones = rs[3] ? rs[3].datos.filter(function(i){
       return i.idCredito === op.idCredito || i.idCredito === '*';
     }) : [];
     dibujarGestion(liga);
@@ -6234,6 +6236,9 @@ function dibujarGestion(liga){
     : '<p class="gc-nota">El cliente no tiene personas registradas. Usa “+ Nueva persona”.</p>';
 
   html += '</div></div>';
+
+  // ---------- Estructura accionaria y control ----------
+  html += seccionEstructura(g);
 
   // ---------- Condiciones ----------
   if (cat.condiciones.length) {
@@ -6282,6 +6287,44 @@ function dibujarGestion(liga){
   ligarGestion();
 }
 
+function seccionEstructura(g){
+  var e = g.estructura || { personas: [], acreditado: '' };
+  var acred = e.personas.filter(function(p){ return p.idPersonalidad === e.acreditado; })[0];
+  var enCredito = {};
+  g.exp.personas.forEach(function(p){ enCredito[p.idPersonalidad] = true; });
+  var nombreDe = {};
+  e.personas.forEach(function(p){ nombreDe[p.idPersonalidad] = p.nombre; });
+
+  var html = '<div class="gc-sec"><div class="gc-sec-h"><span>Estructura accionaria y control</span></div><div class="gc-sec-b">';
+  if (!acred) return html + '<p class="gc-nota">Asigna primero al acreditado.</p></div></div>';
+  if (acred.tipoPersona !== 'PM') return html + '<p class="gc-nota">El acreditado es persona física: no lleva carta de control ni tabla de accionistas.</p></div></div>';
+
+  html += '<p class="gc-nota">Captura el porcentaje de cada accionista de <b>' + esc(acred.nombre) + '</b> (o de la empresa a la que pertenece) y marca quién ejerce control. ' +
+    'Son <b>controladores</b> las personas físicas con 25% o más de participación efectiva, directa o a través de otras empresas, o marcadas como de control. Ellas llenan la carta de control.</p>';
+
+  var otros = e.personas.filter(function(p){ return p.idPersonalidad !== e.acreditado; });
+  if (!otros.length) html += '<p class="gc-nota">El cliente no tiene más personas registradas. Agrega a los accionistas con “+ Nueva persona”.</p>';
+
+  otros.forEach(function(p){
+    var aviso = p.controlador && !enCredito[p.idPersonalidad]
+      ? '<span class="sub" style="color:var(--bad)">Asígnale un rol en este crédito (por ejemplo Accionistas PF) para pedirle sus datos y documentos.</span>' : '';
+    html += '<div class="gc-persona"><div><b>' + esc(p.nombre) + '</b><small>' + esc(p.idPersonalidad + ' · ' + p.tipoPersona +
+        ' · accionista de ' + (p.perteneceA ? (nombreDe[p.perteneceA] || p.perteneceA) : acred.nombre)) + '</small>' +
+        (p.controlador ? ' <span class="chip c-ok">Controlador · ' + esc(String(p.efectiva)) + '% efectivo</span>' : '') + aviso + '</div>' +
+      '<div class="gc-fila" style="flex-wrap:nowrap;align-items:center">' +
+        '<input data-pct="' + esc(p.idPersonalidad) + '" value="' + esc(p.porcentaje === '' ? '' : String(p.porcentaje)) + '" placeholder="%" inputmode="decimal" style="width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--ground)">' +
+        '<label class="gc-conds" style="font-size:12.5px"><span><input type="checkbox" data-ctl="' + esc(p.idPersonalidad) + '"' + (p.ejerceControl ? ' checked' : '') + '> Ejerce control</span></label>' +
+        '<button type="button" class="gc-link" data-guardar-ctl="' + esc(p.idPersonalidad) + '">Guardar</button>' +
+      '</div></div>';
+  });
+
+  var nCtrl = e.personas.filter(function(p){ return p.controlador; }).length;
+  html += '<p class="gc-nota">' + (nCtrl
+    ? nCtrl + ' controlador(es) identificado(s)' + (nCtrl > 5 ? '. La carta de control tiene espacio para 5.' : '.')
+    : '<span style="color:var(--bad)">Todavía no hay controladores identificados: la carta de control saldría vacía.</span>') + '</p>';
+  return html + '</div></div>';
+}
+
 function ligarGestion(){
   var g = COORD.gestion, cat = COORD.catalogos || { roles: [] };
   var tras = function(btn, msg){
@@ -6324,6 +6367,18 @@ function ligarGestion(){
       if (!confirm('¿Quitar este rol? Los documentos pendientes que ya no apliquen se marcarán como "No aplica". Lo ya entregado se conserva.')) return;
       apiPortal('quitarRol', { idRelacion: b.getAttribute('data-quitar') })
         .then(tras(null, function(d){ return 'Rol retirado. ' + d.checklist.desactivados + ' documento(s) pasaron a No aplica.'; }));
+    };
+  });
+
+  // Estructura y control
+  Array.prototype.forEach.call($('gcCuerpo').querySelectorAll('[data-guardar-ctl]'), function(b){
+    b.onclick = function(){
+      var id = b.getAttribute('data-guardar-ctl');
+      var pct = $('gcCuerpo').querySelector('[data-pct="' + id + '"]').value.trim();
+      var ctl = $('gcCuerpo').querySelector('[data-ctl="' + id + '"]').checked;
+      ocupado(b, true, 'Guardando…');
+      apiPortal('definirControl', { idPersonalidad: id, porcentaje: pct, ejerceControl: ctl })
+        .then(tras(null, function(){ return 'Participación y control guardados.'; }));
     };
   });
 
