@@ -471,6 +471,15 @@ tbody tr:last-child td{border-bottom:0}
 .gc-inv .sub{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 .pt-tot{display:flex;flex-wrap:wrap;gap:6px 18px;background:var(--navy-soft);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:var(--ink-2);position:sticky;top:-24px;z-index:2}
 .pt-tot b{color:var(--navy);font-variant-numeric:tabular-nums}
+.hist{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 20px 14px}
+.hist-dia{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);padding:16px 0 6px}
+.hist-ev{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2)}
+.hist-ev:last-child{border-bottom:0}
+.hist-ic{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-size:12px}
+.hist-ev.mal .hist-ic{background:var(--bad-soft);color:var(--bad)}
+.hist-ev b{font-size:14px;display:block}
+.hist-det{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
+.hist-pie{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -7679,6 +7688,85 @@ $('kyCancel').addEventListener('click', function(){ $('ovKyc').classList.remove(
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && $('ovKyc').classList.contains('on')) $('ovKyc').classList.remove('on');
 });
+
+</script>
+
+<script>
+/* ============================================================
+   LÍNEA DE TIEMPO CONECTADA
+
+   Historial real del crédito a partir de la Bitácora.
+   Esta función pintarLinea() reemplaza a la de demostración.
+   ============================================================ */
+
+var LINEA = { info: null, cargando: false, credito: null };
+
+var ICONO_LINEA = { inicio: '★', acceso: '⚿', personas: '👥', datos: '✎', documento: '⇪', revision: '✓', 'revision-mal': '✕' };
+
+function pintarLinea(){
+  if (!SESION || !CREDITO_ACTIVO) return;
+  var panel = $('p-linea');
+  if (!$('lineaConectada')) {
+    Array.prototype.forEach.call(panel.children, function(el){ el.hidden = true; });
+    var cont = document.createElement('div');
+    cont.id = 'lineaConectada';
+    panel.appendChild(cont);
+  }
+  if (LINEA.credito !== CREDITO_ACTIVO.idCredito) { LINEA.info = null; LINEA.credito = CREDITO_ACTIVO.idCredito; }
+  if (!LINEA.info && !LINEA.cargando) return cargarLinea();
+  if (LINEA.info) dibujarLinea();
+}
+
+function cargarLinea(){
+  LINEA.cargando = true;
+  $('lineaConectada').innerHTML = '<p class="vacio">Cargando el historial…</p>';
+  return apiPortal('lineaTiempo', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    LINEA.cargando = false;
+    if (!r.ok) { $('lineaConectada').innerHTML = '<div class="alerta"><span class="alerta-ic">!</span><div>' + esc(r.mensaje) + '</div></div>'; return; }
+    LINEA.info = r.datos;
+    dibujarLinea();
+  });
+}
+
+function dibujarLinea(){
+  var i = LINEA.info, interno = esInternoPortal();
+  var horaMx = function(v){ var d = new Date(v); return isNaN(d) ? '' : d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }); };
+  var diaMx = function(v){ var d = new Date(v); return isNaN(d) ? '' : d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
+
+  var html = '<div class="intro" style="margin-bottom:18px"><h1>' + (interno ? 'Historial del crédito.' : 'Cómo va tu solicitud.') + '</h1>' +
+    '<p>' + (interno
+      ? 'Todo lo que ha pasado en este crédito, tomado de la Bitácora: altas, accesos, datos, documentos y revisiones.'
+      : 'Todo lo que ha pasado con tu solicitud, del más reciente al más antiguo.') + '</p></div>';
+
+  var r = i.resumen || {};
+  html += '<div class="kpis" style="margin-bottom:18px">' +
+    '<div class="kpi k-navy"><span class="kpi-lbl">Solicitud abierta</span><b class="kpi-num" style="font-size:18px">' + esc(r.inicio ? fechaMx(r.inicio) : '—') + '</b><span class="kpi-pie">' + esc(String(r.dias || 0)) + ' días</span></div>' +
+    '<div class="kpi k-accent"><span class="kpi-lbl">Documentos recibidos</span><b class="kpi-num">' + esc(String(r.documentosRecibidos || 0)) + '</b></div>' +
+    '<div class="kpi ' + (r.rechazos ? 'k-bad' : 'k-ok') + '"><span class="kpi-lbl">Rechazos</span><b class="kpi-num">' + esc(String(r.rechazos || 0)) + '</b></div>' +
+    '<div class="kpi k-navy"><span class="kpi-lbl">Último movimiento</span><b class="kpi-num" style="font-size:18px">' + esc(r.ultimo ? fechaMx(r.ultimo) : '—') + '</b></div>' +
+    '</div>';
+
+  html += '<div class="cc-barra"><span class="esp"></span><button type="button" class="btn btn-g btn-sm" id="lineaActualizar">Actualizar</button></div>';
+
+  if (!i.eventos.length) {
+    html += '<p class="vacio">Todavía no hay movimientos registrados.</p>';
+  } else {
+    var diaAnterior = '';
+    html += '<div class="hist">';
+    i.eventos.forEach(function(e){
+      var dia = diaMx(e.fecha);
+      if (dia !== diaAnterior) { html += '<div class="hist-dia">' + esc(dia) + '</div>'; diaAnterior = dia; }
+      var mal = /-mal$/.test(e.tipo);
+      html += '<div class="hist-ev' + (mal ? ' mal' : '') + '">' +
+        '<span class="hist-ic">' + (ICONO_LINEA[e.tipo] || '•') + '</span>' +
+        '<div><b>' + esc(e.titulo) + '</b>' + (e.detalle ? '<span class="hist-det">' + esc(e.detalle) + '</span>' : '') +
+        '<span class="hist-pie">' + esc(horaMx(e.fecha)) + ' · ' + esc(e.quien) + '</span></div></div>';
+    });
+    html += '</div>';
+  }
+  $('lineaConectada').innerHTML = html;
+  $('lineaActualizar').onclick = function(){ LINEA.info = null; cargarLinea(); };
+}
 
 </script>
 </body>
