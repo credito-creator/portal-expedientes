@@ -812,7 +812,7 @@
       <td colspan="4"><span class="et c">País</span><input class="v" data-c="p_pais" value="México"></td>
       <td colspan="4"><span class="et c">Código postal</span><input class="v cp" data-c="p_cp" maxlength="5" inputmode="numeric"></td>
     </tr>
-    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input data-c="motivoMexico" class="v"></td></tr>
 
     <tr><td class="barra negra" colspan="12">DATOS COMPLEMENTARIOS - Perfil transaccional</td></tr>
     <tr><td colspan="12"><span class="et">Especificar cual será el origen de los recursos con el cual pagará el crédito o gastos (comisión, interés, notaria, etc.) de algún servicio con Factor GFC</span><input class="v" data-c="origenRecursos"></td></tr>
@@ -851,21 +851,21 @@
       <span class="et">¿Su conyugue o algún pariente por consanguinidad o afinidad en segundo grado, desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
       <span class="sn"><input type="radio" name="kycD2" id="kycD2s"><label class="bx" for="kycD2s"></label>Si</span>
       <span class="sn"><input type="radio" name="kycD2" id="kycD2n"><label class="bx" for="kycD2n"></label>No</span>
-      <input class="v">
+      <input data-c="familiarCargoDetalle" class="v">
     </td></tr>
     <tr><td colspan="12">
       <span class="et">¿Alguna persona distinta a usted hará uso, obtendrá los beneficios o decidirá sobre el uso, aprovechamiento o destino del recurso proveniente del crédito solicitado?</span>
       <span class="sn"><input type="radio" name="kycD3" id="kycD3s"><label class="bx" for="kycD3s"></label>Si</span>
       <span class="sn"><input type="radio" name="kycD3" id="kycD3n"><label class="bx" for="kycD3n"></label>No</span>
       <span class="et" style="display:inline">(De ser así, especificar el nombre de la persona física o moral y el motivo)</span>
-      <input class="v">
+      <input data-c="terceroBeneficiarioDetalle" class="v">
     </td></tr>
     <tr><td colspan="12">
       <span class="et">¿Alguna persona física o moral distinta a usted aportará, pagará o depósitará con sus propios recursos a la SOFOM para el cumplimiento del presente crédito, así como los gastos y comisiones que se generen del mismo?</span>
       <span class="sn"><input type="radio" name="kycD4" id="kycD4s"><label class="bx" for="kycD4s"></label>Si</span>
       <span class="sn"><input type="radio" name="kycD4" id="kycD4n"><label class="bx" for="kycD4n"></label>No</span>
       <span class="et" style="display:inline">(De ser así, especificar el nombre de la persona física o moral y especificar el motivo)</span>
-      <input class="v">
+      <input data-c="terceroAportanteDetalle" class="v">
     </td></tr>
     <tr><td colspan="12" style="padding:6px 4px 26px">
       <span class="et">Declaro que la información y documentación presentada es verídica, que actúo por cuenta propia y que el origen de mis recursos son provenientes de actividades lícitas.</span>
@@ -977,18 +977,18 @@
       <td colspan="4"><span class="et c">País / Entidad federativa</span><input class="v" data-c="p_pais" value="México"></td>
       <td colspan="4"><span class="et c">Código postal</span><input class="v cp" data-c="p_cp" maxlength="5" inputmode="numeric"></td>
     </tr>
-    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input data-c="motivoMexico" class="v"></td></tr>
 
     <tr><td class="barra negra" colspan="12">Informacion general de la solicitud de credito (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
     <tr><td colspan="12"><span class="et">Nombre / Razón social del acreditado bajo el cual se solicitó el crédito o servicio con Factor GFC Global</span><input class="v" data-c="acreditado"></td></tr>
-    <tr><td colspan="12"><span class="et">Tipo e importe del(os) crédito(s) o servicio solicitada a Factor GFC Global</span><input class="v"></td></tr>
-    <tr><td colspan="12"><span class="et">Especificar para que será destinado el recurso proveniente del crédito o servicio solicitado a Factor GFC</span><input class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">Tipo e importe del(os) crédito(s) o servicio solicitada a Factor GFC Global</span><input data-c="tipoImporteCredito" class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">Especificar para que será destinado el recurso proveniente del crédito o servicio solicitado a Factor GFC</span><input data-c="destinoCredito" class="v"></td></tr>
     <tr><td colspan="12">
       <span class="et" style="display:inline">¿En lo personal, tiene usted créditos vigentes con Factor GFC?</span>
       <span class="sn"><input type="radio" name="prCred" id="prCredS"><label class="bx grande" for="prCredS"></label>SI</span>
       <span class="sn"><input type="radio" name="prCred" id="prCredN"><label class="bx grande" for="prCredN"></label>No</span>
     </td></tr>
-    <tr><td colspan="12"><span class="et">De ser así, especificar por que importe son y bajo que tipo</span><input class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">De ser así, especificar por que importe son y bajo que tipo</span><input data-c="creditosVigentes" class="v"></td></tr>
 
     <tr><td class="barra negra" colspan="12">Exclusivo para (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica):</td></tr>
     <tr><td class="sub" colspan="6">Propietario real</td><td class="sub" colspan="6">Proveedor de recursos</td></tr>
@@ -997,8 +997,8 @@
       <td colspan="6"><span class="et c">Razón por las cuales esta aportando pagos o depósitos al crédito solicidato a Factor GFC</span></td>
     </tr>
     <tr>
-      <td colspan="6"><textarea class="v" rows="4"></textarea></td>
-      <td colspan="6"><textarea class="v" rows="4"></textarea></td>
+      <td colspan="6"><textarea data-c="razonPropietarioReal" class="v" rows="4"></textarea></td>
+      <td colspan="6"><textarea data-c="razonProveedorRecursos" class="v" rows="4"></textarea></td>
     </tr>
 
     <tr><td class="barra negra" colspan="12">DATOS COMPLEMENTARIOS - Declaratoria (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
@@ -1007,7 +1007,7 @@
       <span class="sn"><input type="radio" name="prD1" id="prD1s"><label class="bx" for="prD1s"></label>Si</span>
       <span class="sn"><input type="radio" name="prD1" id="prD1n"><label class="bx" for="prD1n"></label>No</span>
       <span class="et" style="display:inline">(De ser así, especificar la dependencia, el puesto, las principales funciones y periodo de ejercicio)</span>
-      <input class="v">
+      <input data-c="cargoPublicoDetalle" class="v">
     </td></tr>
     <tr><td colspan="12">
       <span class="et">¿Su conyugue o algún pariente por consanguinidad o afinidad en segundo grado, desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
@@ -2539,6 +2539,13 @@ if(cargoPublico === "no"){
     $("kycD1n").checked = true;
   }
 }
+    /* Casillas que manda el portal (declaratorias, efectivo, clasificación) */
+    if(Array.isArray(d.__marcar)){
+      d.__marcar.forEach(function(id){
+        var el = $(id);
+        if(el && !el.checked){ el.checked = true; el.dispatchEvent(new Event("change", {bubbles:true})); n++; }
+      });
+    }
     if(n){ actualizarEcos(); recalcular(); encajarTodo(); actualizarEstatus(); }
     return n;
   }
