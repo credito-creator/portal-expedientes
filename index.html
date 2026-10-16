@@ -5661,6 +5661,16 @@ function convertirArchivoBase64(archivo) {
   </div>
 </div></div>
 
+<!-- ============ EXPEDIENTE FINAL ============ -->
+<div class="ov" id="ovExp"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="exTit">
+  <div class="mo-h"><b id="exTit">Expediente</b><span id="exSub"></span></div>
+  <div class="mo-b" id="exCuerpo"></div>
+  <div class="mo-f">
+    <button type="button" class="btn btn-g" id="exCancel">Cerrar</button>
+    <button type="button" class="btn btn-p" id="exOk">Generar</button>
+  </div>
+</div></div>
+
 <!-- ============ COORDINACIÓN: altas ============ -->
 <div class="ov" id="ovAlta"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="altaTit">
   <div class="mo-h"><b id="altaTit">Alta</b><span id="altaSub"></span></div>
@@ -7730,6 +7740,7 @@ function cargarLinea(){
 
 function dibujarLinea(){
   var i = LINEA.info, interno = esInternoPortal();
+  if (!Array.isArray(i.eventos)) i.eventos = [];
   var horaMx = function(v){ var d = new Date(v); return isNaN(d) ? '' : d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }); };
   var diaMx = function(v){ var d = new Date(v); return isNaN(d) ? '' : d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
 
@@ -7767,6 +7778,210 @@ function dibujarLinea(){
   $('lineaConectada').innerHTML = html;
   $('lineaActualizar').onclick = function(){ LINEA.info = null; cargarLinea(); };
 }
+
+</script>
+
+<script>
+/* ============================================================
+   EXPEDIENTE FINAL — botón "Generar expediente" (personal interno)
+
+   1. La API arma en Drive una carpeta nueva con los documentos
+      ACEPTADOS en orden y un índice en PDF.
+   2. Opcional: el portal une todo en un solo PDF (con pdf-lib, en
+      este navegador), lo descarga y lo guarda en esa carpeta.
+   ============================================================ */
+
+var EXPF = { resultado: null };
+var PDFLIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+
+var dibujarDocsSinExp = dibujarDocs;
+dibujarDocs = function(){
+  dibujarDocsSinExp();
+  if (!esInternoPortal() || !$('docsConectados')) return;
+  var barra = $('docsConectados').querySelector('.cc-barra');
+  if (!barra || barra.querySelector('#btnExpediente')) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.id = 'btnExpediente'; b.className = 'btn btn-p btn-sm';
+  b.textContent = 'Generar expediente';
+  b.onclick = abrirExpedienteFinal;
+  barra.insertBefore(b, $('docsActualizar'));
+};
+
+function aceptadosDelCredito(){
+  return (DOCS.exp ? DOCS.exp.documentos : []).filter(function(d){ return d.estado !== 'No aplica' && d.estadoRevision === 'Aceptado'; });
+}
+
+function abrirExpedienteFinal(){
+  var n = aceptadosDelCredito().length;
+  var total = (DOCS.exp ? DOCS.exp.documentos : []).filter(function(d){ return d.estado !== 'No aplica'; }).length;
+  EXPF.resultado = null;
+  $('exTit').textContent = 'Expediente de ' + CREDITO_ACTIVO.idCredito;
+  $('exSub').textContent = CREDITO_ACTIVO.cliente;
+  $('exCuerpo').innerHTML =
+    '<p>Se armará con los <b>' + n + ' documentos aceptados</b> (de ' + total + ' requeridos), en el orden del checklist, con un índice en PDF.</p>' +
+    '<p class="gc-nota">Se crea una carpeta nueva en <b>Expediente final</b> del crédito en Drive, con la fecha y hora. Las versiones anteriores no se borran. ' +
+    'Los documentos en revisión, rechazados o pendientes no se incluyen; aparecen listados en el índice.</p>' +
+    (n ? '' : '<p class="acceso-error">Todavía no hay documentos aceptados.</p>');
+  $('exOk').hidden = !n;
+  $('exOk').textContent = 'Generar';
+  $('exOk').onclick = generarExpedienteFinal;
+  $('ovExp').classList.add('on');
+}
+
+function generarExpedienteFinal(){
+  var btn = $('exOk');
+  ocupado(btn, true, 'Generando…');
+  $('exCuerpo').innerHTML = '<p>Copiando los documentos en Drive y armando el índice… <span class="gc-nota">(puede tardar uno o dos minutos)</span></p>';
+  apiPortal('generarExpediente', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    ocupado(btn, false);
+    if (!r.ok) { $('exCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    var d = EXPF.resultado = r.datos;
+    $('exCuerpo').innerHTML =
+      '<div class="alerta ok" style="margin-bottom:14px"><span class="alerta-ic">✓</span><div><b>' + esc(d.nombreCarpeta) + '</b> lista: ' +
+        d.incluidos.length + ' documento(s) e índice.' + (d.pendientes ? ' Quedaron ' + d.pendientes + ' pendiente(s) fuera.' : '') + '</div></div>' +
+      (d.errores.length ? '<p class="acceso-error">No se pudieron copiar: ' + esc(d.errores.join('; ')) + '</p>' : '') +
+      '<p><a href="' + esc(d.carpetaUrl) + '" target="_blank" rel="noopener">Abrir la carpeta en Drive</a> · ' +
+      '<a href="#" id="exVerIndice">Ver el índice</a></p>' +
+      '<div class="gc-sec"><div class="gc-sec-h"><span>Un solo PDF</span></div><div class="gc-sec-b">' +
+        '<p class="gc-nota">Une el índice y todos los documentos en un archivo para comité o envío. Se arma en este navegador, se descarga y se guarda también en la carpeta. ' +
+        'Los XML y ZIP no caben en un PDF: quedan en la carpeta y se señalan con una página.</p>' +
+        '<div id="exProg" class="gc-nota"></div>' +
+      '</div></div>';
+    $('exVerIndice').onclick = function(ev){ ev.preventDefault(); abrirBase64(d.indiceBase64, 'application/pdf', 'Indice.pdf'); };
+    btn.textContent = 'Armar un solo PDF';
+    btn.onclick = armarPdfUnico;
+    if (DOCS.exp) recargarDocs();
+  });
+}
+
+function abrirBase64(b64, mime, nombre){
+  var bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  var w = window.open(url, '_blank');
+  if (!w) { var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); }
+}
+
+function b64aBytes(b64){
+  var bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function bytesAB64(bytes){
+  var s = '', paso = 0x8000;
+  for (var i = 0; i < bytes.length; i += paso) s += String.fromCharCode.apply(null, bytes.subarray(i, i + paso));
+  return btoa(s);
+}
+
+function cargarPdfLib(){
+  if (window.PDFLib) return Promise.resolve(window.PDFLib);
+  return new Promise(function(ok, mal){
+    var s = document.createElement('script');
+    s.src = PDFLIB_URL;
+    s.onload = function(){ ok(window.PDFLib); };
+    s.onerror = function(){ mal(new Error('No se pudo cargar la librería de PDF.')); };
+    document.head.appendChild(s);
+  });
+}
+
+function armarPdfUnico(){
+  var d = EXPF.resultado, btn = $('exOk'), prog = $('exProg');
+  ocupado(btn, true, 'Armando…');
+  var progreso = function(t){ prog.textContent = t; };
+
+  var lista = d.incluidos.slice();
+  var ids = lista.map(function(x){ return x.idArchivo; });
+  var bytesDe = {};
+
+  progreso('Cargando la librería de PDF…');
+  cargarPdfLib().then(function(PDFLib){
+    // Descarga por lotes
+    var faltan = ids.slice();
+    var descargar = function(){
+      if (!faltan.length) return Promise.resolve();
+      progreso('Descargando documentos: ' + (ids.length - faltan.length) + ' de ' + ids.length + '…');
+      return apiPortal('descargarLote', { ids: faltan }).then(function(r){
+        if (!r.ok) throw new Error(r.mensaje);
+        r.datos.archivos.forEach(function(a){ bytesDe[a.idArchivo] = a.error ? null : { mime: a.tipoMime, bytes: b64aBytes(a.archivoBase64) }; });
+        var entregados = r.datos.archivos.map(function(a){ return a.idArchivo; });
+        faltan = faltan.filter(function(id){ return entregados.indexOf(id) === -1; });
+        if (!entregados.length) throw new Error('El servidor no entregó archivos.');
+        return descargar();
+      });
+    };
+
+    return descargar().then(function(){
+      progreso('Uniendo ' + lista.length + ' documentos…');
+      return PDFLib.PDFDocument.create().then(function(salida){
+        var fuente;
+        var paginaAviso = function(texto){
+          var p = salida.addPage([612, 792]);
+          p.drawText(texto, { x: 50, y: 720, size: 12, font: fuente, maxWidth: 512, lineHeight: 16 });
+        };
+        var agregarPdf = function(bytes){
+          return PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true }).then(function(src){
+            return salida.copyPages(src, src.getPageIndices()).then(function(pags){ pags.forEach(function(p){ salida.addPage(p); }); });
+          });
+        };
+        var agregarImagen = function(bytes, mime){
+          var emb = /png/.test(mime) ? salida.embedPng(bytes) : salida.embedJpg(bytes);
+          return emb.then(function(img){
+            var esc2 = Math.min(552 / img.width, 732 / img.height, 1);
+            var p = salida.addPage([612, 792]);
+            p.drawImage(img, { x: (612 - img.width * esc2) / 2, y: (792 - img.height * esc2) / 2, width: img.width * esc2, height: img.height * esc2 });
+          });
+        };
+
+        return salida.embedFont(PDFLib.StandardFonts.Helvetica).then(function(f){ fuente = f; })
+          .then(function(){ return agregarPdf(b64aBytes(d.indiceBase64)); })
+          .then(function(){
+            var cadena = Promise.resolve();
+            lista.forEach(function(x, i){
+              cadena = cadena.then(function(){
+                progreso('Uniendo ' + (i + 1) + ' de ' + lista.length + ': ' + x.nombre);
+                var a = bytesDe[x.idArchivo];
+                var aviso = function(motivo){ paginaAviso(x.nombre + '\n\n' + motivo + '\nConsulta el archivo en la carpeta del expediente.'); };
+                if (!a) return aviso('No se pudo descargar.');
+                if (/pdf/.test(a.mime)) return agregarPdf(a.bytes).catch(function(){ aviso('Este PDF no se pudo unir (puede estar protegido).'); });
+                if (/jpe?g|png/.test(a.mime)) return agregarImagen(a.bytes, a.mime).catch(function(){ aviso('Esta imagen no se pudo unir.'); });
+                return aviso('Archivo ' + (a.mime || '') + ': no se puede incluir dentro de un PDF.');
+              });
+            });
+            return cadena;
+          })
+          .then(function(){ return salida.save(); });
+      });
+    }).then(function(bytes){
+      var nombre = 'Expediente ' + CREDITO_ACTIVO.idCredito + ' - ' + d.nombreCarpeta.replace('Expediente ', '') + '.pdf';
+      var mb = bytes.length / 1048576;
+      // Descarga local
+      var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+
+      if (mb > 25) {
+        progreso('Listo: se descargó "' + nombre + '" (' + mb.toFixed(1) + ' MB). Es demasiado grande para guardarlo en Drive desde aquí; súbelo a la carpeta a mano si lo necesitas.');
+        ocupado(btn, false); btn.hidden = true;
+        return;
+      }
+      progreso('Guardando en Drive (' + mb.toFixed(1) + ' MB)…');
+      return apiPortalUnaVez('guardarExpedientePdf', {
+        idCredito: CREDITO_ACTIVO.idCredito, carpetaId: d.carpetaId, nombre: nombre, archivoBase64: bytesAB64(bytes)
+      }).then(function(r){
+        ocupado(btn, false); btn.hidden = true;
+        progreso(r.ok ? 'Listo: "' + nombre + '" se descargó y quedó guardado en la carpeta del expediente.'
+                      : 'Se descargó "' + nombre + '", pero no se pudo guardar en Drive: ' + r.mensaje);
+      });
+    });
+  }).catch(function(err){
+    ocupado(btn, false);
+    progreso('');
+    $('exProg').innerHTML = '<span class="acceso-error">No se pudo armar el PDF: ' + esc(err.message || String(err)) + '. La carpeta con los documentos sí quedó lista.</span>';
+    reportarErrorPortal('PDF único ' + CREDITO_ACTIVO.idCredito, err && err.stack ? err.stack : String(err));
+  });
+}
+
+$('exCancel').addEventListener('click', function(){ $('ovExp').classList.remove('on'); });
 
 </script>
 </body>
