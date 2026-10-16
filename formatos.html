@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formatos de integración de expediente — Factor GFC Global SOFOM</title>
+<style>
+  :root{
+    --papel:#ffffff;
+    --escritorio:#e4e7ea;
+    --tinta:#111111;
+    --tinta-suave:#5c6b78;
+    --navy:#1f3864;
+    --linea:#8c98a4;
+    --activo:#0f7a68;
+    --alerta:#a02b21;
+    --gris:#e6e6e6;
+    --sub:#dfe3ea;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background:var(--escritorio);
+    color:var(--tinta);
+    font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+    padding:0 0 96px;
+  }
+
+  /* ================= Barra superior ================= */
+  .cabecera{
+    position:sticky;top:0;z-index:30;
+    background:var(--papel);
+    border-bottom:1px solid #ccd3d9;
+    padding:10px 16px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    font-size:13px;
+  }
+  .cabecera h1{
+    font-size:14px;margin:0;font-weight:bold;letter-spacing:.01em;
+  }
+  .cabecera label{color:var(--tinta-suave);}
+  .cabecera select{
+    font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--linea);
+    border-radius:4px;background:var(--papel);color:var(--tinta);max-width:100%;
+  }
+  .indice{
+    display:flex;gap:6px;flex-wrap:wrap;flex:1 1 100%;
+    border-top:1px solid #eef1f3;padding-top:8px;margin-top:2px;
+  }
+  .indice a{
+    font-size:11.5px;color:var(--tinta-suave);text-decoration:none;
+    border:1px solid #dfe4e8;border-radius:3px;padding:3px 8px;
+  }
+  .indice a:hover{border-color:var(--activo);color:var(--activo);}
+
+  /* ================= Hoja ================= */
+  .doc{display:none;}
+  .doc.activo{display:block;}
+
+  .hoja{
+    width:21.59cm;min-height:27.94cm;max-width:100%;
+    margin:20px auto;background:var(--papel);
+    padding:1cm 1.05cm;
+    box-shadow:0 1px 2px rgba(20,35,45,.14),0 12px 34px rgba(20,35,45,.16);
+    font-size:8pt;line-height:1.35;
+  }
+  .hoja.amplia{padding:1.6cm 1.9cm;font-size:9.4pt;line-height:1.45;}
+
+  /* ================= Encabezado de hoja ================= */
+  .memb{display:grid;grid-template-columns:4.2cm 1fr 5.6cm;align-items:flex-start;gap:10px;margin-bottom:8px;}
+  .memb.simple{grid-template-columns:4.2cm 1fr;}
+  .logo{height:1.55cm;display:flex;align-items:center;}
+  .logo img{max-height:100%;max-width:100%;}
+  .logo-vacio{
+    width:100%;height:100%;border:1px dashed #b9c2cb;border-radius:3px;
+    color:var(--tinta-suave);font-size:7pt;display:flex;align-items:center;
+    justify-content:center;text-align:center;padding:3px;cursor:pointer;
+  }
+  .logo-vacio:hover{border-color:var(--activo);color:var(--activo);}
+  .titulo-doc{text-align:center;font-weight:bold;font-size:11pt;padding-top:.35cm;line-height:1.25;}
+  .titulo-doc small{display:block;font-weight:normal;font-size:8.5pt;}
+  .caja-fecha{border:1px solid var(--navy);}
+  .caja-fecha .et{background:var(--navy);color:#fff;text-align:center;padding:2px;font-size:6.6pt;}
+  .caja-fecha .cuerpo{padding:6px 4px;}
+
+  /* ================= Rejillas ================= */
+  table.g{width:100%;border-collapse:collapse;table-layout:fixed;}
+  table.g td{border:1px solid #000;padding:1px 3px;vertical-align:top;}
+  td.barra{
+    background:var(--navy);color:#fff;font-weight:bold;text-align:center;
+    font-size:6.9pt;padding:2px 4px;line-height:1.2;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  td.barra.negra{background:#000;text-align:left;}
+  td.sub{background:var(--sub);font-weight:bold;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td.enc{font-weight:normal;text-align:center;}
+  td.lbl{background:#f3f4f6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td.sinborde{border:0;}
+
+  .et{display:block;font-size:6.3pt;line-height:1.15;color:#000;}
+  .et.c{text-align:center;}
+  .et.b{font-weight:bold;}
+
+  input.v,select.v,textarea.v{
+    display:block;width:100%;font:inherit;font-size:7.4pt;color:#000;
+    background:#eef4f3;border:0;border-radius:2px;padding:1px 2px;min-height:13px;
+  }
+  textarea.v{resize:vertical;min-height:34px;line-height:1.3;}
+  textarea.v.celda{
+    resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
+    line-height:1.18;min-height:13px;padding:1px 2px;
+  }
+  input.v:hover,select.v:hover,textarea.v:hover{background:#e3eeec;}
+  input.v:focus,select.v:focus,textarea.v:focus{outline:none;background:#d9ebe7;box-shadow:inset 0 -1.6px 0 var(--activo);}
+  input.v:focus-visible,select.v:focus-visible,textarea.v:focus-visible{box-shadow:inset 0 -1.6px 0 var(--activo),0 0 0 2px rgba(15,122,104,.25);}
+  select.v{cursor:pointer;}
+  .num{text-align:right;}
+  .calc{background:#f0f0f0;font-weight:bold;}
+
+  /* Casillas SI / NO */
+  .sn{display:inline-flex;align-items:center;gap:3px;margin-right:10px;font-size:6.8pt;white-space:nowrap;}
+  .sn input{position:absolute;opacity:0;width:0;height:0;}
+  .bx{
+    display:inline-block;width:11px;height:11px;border:1px solid #000;
+    text-align:center;line-height:9.5px;font-size:9px;font-weight:bold;cursor:pointer;background:#eef4f3;
+  }
+  .sn input:checked + .bx::after{content:"X";}
+  .sn input:focus-visible + .bx{box-shadow:0 0 0 2px rgba(15,122,104,.45);}
+  .bx.grande{width:15px;height:13px;line-height:12px;}
+
+  /* Líneas de firma */
+  .firma{margin:34px 0 6px;text-align:center;}
+  .firma .raya{width:7cm;margin:0 auto 3px;border-top:1px solid #000;}
+  .nombre-firma{
+    display:block;width:100%;font:inherit;font-size:8.8pt;text-align:center;color:#000;
+    background:#eef4f3;border:0;border-radius:2px 2px 0 0;padding:1px 6px;margin:0 auto 1px;
+  }
+  .nombre-firma::placeholder{color:#9aa7b0;font-style:italic;}
+  .nombre-firma:focus{outline:none;background:#d9ebe7;box-shadow:inset 0 -1.6px 0 var(--activo);}
+  .nombre-firma:focus-visible{box-shadow:inset 0 -1.6px 0 var(--activo),0 0 0 2px rgba(15,122,104,.25);}
+  .firma .cap{font-size:7.4pt;font-weight:bold;}
+  .firma .nota{color:var(--tinta-suave);font-size:7pt;margin-top:4px;}
+  .pie{margin-top:10px;text-align:center;font-size:6.6pt;font-weight:bold;}
+  .pie.izq{text-align:left;font-weight:normal;}
+
+  /* Texto legal a dos columnas */
+  .legal{column-count:2;column-gap:16px;font-size:6.6pt;line-height:1.28;text-align:justify;}
+  .legal p{margin:0 0 5px;}
+  .legal h3{font-size:6.9pt;margin:6px 0 2px;}
+  .legal-1{font-size:6.6pt;line-height:1.3;text-align:justify;}
+  .legal-1 p{margin:0 0 4px;}
+
+  /* Autorización BC (hoja amplia) */
+  .parrafo{text-align:justify;margin:0 0 14px;}
+  .campo{display:flex;align-items:flex-end;gap:6px;min-width:0;}
+  .campo label{white-space:nowrap;padding-bottom:2px;}
+  .campo .linea{
+    flex:1 1 auto;min-width:2.4cm;font:inherit;color:#000;background:#eef4f3;
+    border:0;border-bottom:1px solid var(--linea);padding:2px 3px;border-radius:2px 2px 0 0;
+  }
+  .campo .linea:focus{outline:none;background:#d9ebe7;border-bottom:1.6px solid var(--activo);}
+  .fila{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 18px;margin-bottom:11px;}
+  .caja-uso{border:1px solid #000;margin-top:14px;}
+  .caja-uso h2{margin:0;padding:4px 7px;background:var(--gris);border-bottom:1px solid #000;font-size:9.4pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .caja-uso .cuerpo{padding:8px 7px 10px;}
+  .importante span{font-weight:bold;font-style:italic;text-decoration:underline;}
+  .version{margin-top:20px;text-align:right;color:#c3cad0;font-size:7.5pt;}
+
+  /* ================= Estudio de crédito ================= */
+  [hidden]{display:none !important;}
+  .tabs{display:flex;gap:4px;}
+  .tabs button{border-radius:4px;}
+  .tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:bold;}
+  .hoja.estudio{min-height:auto;font-size:9pt;line-height:1.45;padding:1.4cm 1.5cm;}
+  #estudio .sec{margin:0 0 14px;}
+  #estudio h2{
+    font-size:10.4pt;margin:16px 0 6px;padding:4px 8px;
+    background:var(--navy);color:#fff;break-after:avoid;page-break-after:avoid;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  #estudio h2 .opc{font-weight:normal;font-size:8.4pt;}
+  #estudio h3{font-size:9.2pt;margin:11px 0 4px;border-bottom:1px solid var(--linea);padding-bottom:2px;break-after:avoid;page-break-after:avoid;}
+  #estudio h3 .opc{font-weight:normal;}
+  .guia{
+    font-size:7.6pt;line-height:1.42;color:#41525e;background:#f2f6f7;
+    border-left:3px solid var(--activo);padding:5px 9px;margin:0 0 6px;text-align:justify;
+  }
+  .nota-guia{font-size:7.8pt;font-style:italic;color:#7a4520;background:#fdf6ef;border-left:3px solid #c98a5b;padding:5px 9px;margin:0 0 6px;}
+  .ta{
+    display:block;width:100%;font:inherit;font-size:9pt;line-height:1.45;color:#000;
+    background:#eef4f3;border:1px solid #d7e3e0;border-radius:3px;padding:5px 7px;
+    min-height:58px;overflow:hidden;
+  }
+  .ta:focus{outline:none;background:#d9ebe7;border-color:var(--activo);}
+  .ta.chica{min-height:32px;font-size:8pt;border:0;border-radius:0;padding:3px 4px;}
+  .rt{cursor:text;}
+  .rt:empty::before{content:attr(data-ph);color:#9aa7b0;font-style:italic;}
+  .rt p{margin:0 0 5px;}
+  .rt ul,.rt ol{margin:0 0 5px;padding-left:18px;}
+  .rt table{border-collapse:collapse;width:100%;margin:4px 0;}
+  .rt table td,.rt table th{border:1px solid #000;padding:2px 4px;font-size:8pt;}
+  .img-doc{max-width:100%;height:auto;display:block;margin:6px 0;border-radius:2px;cursor:pointer;}
+  .img-doc:hover{outline:2px solid var(--activo);outline-offset:1px;}
+
+  /* Barra de formato */
+  .barra-texto{
+    position:fixed;left:0;right:0;z-index:50;background:var(--papel);
+    border-bottom:1px solid #ccd3d9;box-shadow:0 3px 12px rgba(20,35,45,.12);
+    padding:7px 14px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+  }
+  .barra-texto button,#imgBar button{font-size:12px;padding:5px 9px;}
+  .barra-texto select{font:inherit;font-size:12px;padding:5px 7px;border:1px solid var(--linea);border-radius:4px;background:var(--papel);}
+  .barra-texto .sep,#imgBar .sep{width:1px;height:20px;background:#dde3e8;margin:0 3px;}
+  .barra-texto .pista{font-size:11.5px;color:var(--tinta-suave);}
+  #imgBar{
+    position:absolute;z-index:60;background:var(--papel);border:1px solid var(--linea);
+    border-radius:5px;box-shadow:0 4px 14px rgba(20,35,45,.2);padding:6px 8px;
+    display:flex;align-items:center;gap:4px;
+  }
+  #imgBar .et-bar{font-size:11px;color:var(--tinta-suave);}
+  button.peligro{border-color:var(--alerta);color:var(--alerta);}
+  button.peligro:hover{background:var(--alerta);color:#fff;}
+
+  /* Mapa */
+  .mapa-panel{margin:8px 0 4px;}
+  .mapa-controles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+  .mapa-controles input{flex:1 1 12cm;font:inherit;font-size:12px;padding:6px 8px;border:1px solid var(--linea);border-radius:4px;}
+  #mapaMarco{width:100%;height:11cm;border:1px solid var(--linea);border-radius:4px;overflow:hidden;background:#eef1f3;}
+  #mapaMarco iframe{width:100%;height:100%;border:0;display:block;}
+  #mapaMarco:empty::before{content:"Escribe una dirección y presiona Ver mapa";display:flex;align-items:center;justify-content:center;height:100%;color:var(--tinta-suave);font-size:12px;}
+  .mapa-nota{font-size:11px;color:var(--tinta-suave);margin-top:5px;}
+  .ver-mapa{font-size:11px;padding:3px 8px;}
+
+  /* Fila seleccionada para quitarla */
+  tr.fila-datos.activa td{background:#eaf5f2;}
+  .menos-fila{font-size:11.5px;padding:4px 10px;margin-top:4px;}
+  #estudio .notas{font-size:7.6pt;line-height:1.36;margin-top:5px;}
+  #estudio .notas p{margin:0 0 3px;}
+  .tabla-est td{padding:2px 3px;}
+  .tabla-est.chica input{font-size:6.9pt;}
+  .mas-fila{font-size:11.5px;padding:4px 10px;margin-top:4px;}
+
+  /* ================= Barra de acciones ================= */
+  .acciones{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:var(--papel);border-top:1px solid #ccd3d9;
+    box-shadow:0 -4px 18px rgba(20,35,45,.1);
+    padding:11px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;
+  }
+  .estatus{flex:1 1 220px;color:var(--tinta-suave);}
+  .estatus.listo{color:var(--activo);font-weight:bold;}
+  button{
+    font:inherit;font-size:13px;padding:9px 15px;border-radius:4px;
+    border:1px solid var(--linea);background:var(--papel);color:var(--tinta);cursor:pointer;
+  }
+  button:hover{border-color:var(--tinta);}
+  button:focus-visible{outline:2px solid var(--activo);outline-offset:2px;}
+  button.principal{background:var(--activo);border-color:var(--activo);color:#fff;font-weight:bold;}
+  button.principal:hover{background:#0c6355;border-color:#0c6355;}
+
+  @media (max-width:860px){
+    .hoja{padding:.7cm .6cm;}
+    .hoja.amplia{padding:1cm .8cm;}
+    .memb,.memb.simple{grid-template-columns:1fr;}
+    .titulo-doc{text-align:left;padding-top:0;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+  /* ================= Impresión ================= */
+  @page{size:letter;margin:1cm;}
+  @media print{
+    body{background:#fff;padding:0;}
+    .cabecera,.acciones,.logo-vacio,.firma .nota,.solo-pantalla{display:none !important;}
+    .hoja{
+      width:auto;min-height:0;margin:0;padding:0;box-shadow:none;
+      page-break-after:always;break-after:page;
+    }
+    .hoja:last-child{page-break-after:auto;break-after:auto;}
+    .hoja.amplia{padding:.6cm .9cm;}
+    input.v,select.v,textarea.v,.campo .linea,.bx,.nombre-firma{background:transparent !important;box-shadow:none !important;}
+    .nombre-firma::placeholder{color:transparent !important;}
+    input.v,select.v,textarea.v{color:#000;}
+    select.v{appearance:none;-webkit-appearance:none;}
+    .fecha-input{display:none;}
+    .guia,.nota-guia,.mas-fila,.menos-fila,.tabs,.barra-texto,#imgBar{display:none !important;}
+    .ta{background:transparent !important;border:0 !important;padding:0 2px;min-height:0;}
+    .rt:empty{display:none !important;}
+    .rt:empty::before{content:"" !important;}
+    .img-doc{outline:0 !important;break-inside:avoid;page-break-inside:avoid;}
+    tr.fila-datos.activa td{background:transparent !important;}
+    .hoja.estudio{padding:0;}
+    .impreso{display:inline-block;min-width:3cm;border-bottom:1px solid #000;padding:1px 3px;}
+    table.g{page-break-inside:avoid;}
+  }
+  .impreso{display:none;}
+</style>
+</head>
+<body>
+
+<div class="cabecera">
+  <div class="tabs">
+    <button type="button" id="tabFormatos" class="on">Formatos de expediente</button>
+    <button type="button" id="tabEstudio">Estudio de crédito</button>
+  </div>
+  <label for="paquete" id="lblPaquete">Paquete:</label>
+  <select id="paquete">
+    <option value="pm-acreditado">Persona Moral — Acreditado</option>
+    <option value="pf-acreditado">Persona Física — Acreditado</option>
+    <option value="pf-aval">Persona Física — Aval</option>
+    <option value="pf-accionistas">Persona Física — Accionistas, Rep. Legal, Garante, Aval</option>
+    <option value="pm-accionistas">Persona Moral — Accionistas, Rep. Legal, Garante, Aval</option>
+  </select>
+  <button type="button" id="btnLogo">Cargar logo</button>
+  <input type="file" id="logoInput" accept="image/*" hidden>
+  <nav class="indice" id="indice"></nav>
+</div>
+
+<div id="barraTexto" class="barra-texto" hidden>
+  <button type="button" data-cmd="bold" title="Negrita"><b>N</b></button>
+  <button type="button" data-cmd="italic" title="Cursiva"><i>K</i></button>
+  <button type="button" data-cmd="underline" title="Subrayado"><u>S</u></button>
+  <span class="sep"></span>
+  <select id="txtTam" title="Tamaño del texto">
+    <option value="2">Pequeño</option>
+    <option value="3" selected>Normal</option>
+    <option value="4">Grande</option>
+    <option value="5">Título</option>
+  </select>
+  <span class="sep"></span>
+  <button type="button" data-cmd="insertUnorderedList" title="Viñetas">• Lista</button>
+  <button type="button" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>
+  <span class="sep"></span>
+  <button type="button" data-cmd="justifyLeft" title="Alinear a la izquierda">≡ Izq</button>
+  <button type="button" data-cmd="justifyCenter" title="Centrar">≡ Centro</button>
+  <button type="button" data-cmd="justifyFull" title="Justificar">≡ Just</button>
+  <span class="sep"></span>
+  <button type="button" id="btnImagen" class="principal">Insertar imagen</button>
+  <button type="button" data-cmd="removeFormat" title="Quitar formato">Limpiar formato</button>
+  <span class="sep"></span>
+  <span class="pista">También puedes pegar imágenes con Ctrl+V</span>
+</div>
+<input type="file" id="imgInput" accept="image/*" multiple hidden>
+
+<div id="imgBar" hidden>
+  <span class="et-bar">Tamaño</span>
+  <button type="button" data-w="25">25%</button>
+  <button type="button" data-w="50">50%</button>
+  <button type="button" data-w="75">75%</button>
+  <button type="button" data-w="100">100%</button>
+  <span class="sep"></span>
+  <span class="et-bar">Posición</span>
+  <button type="button" data-a="left">Izq</button>
+  <button type="button" data-a="center">Centro</button>
+  <button type="button" data-a="right">Der</button>
+  <span class="sep"></span>
+  <button type="button" id="imgDel" class="peligro">Eliminar</button>
+</div>
+
+<main id="documentos">
+<section class="doc" data-doc="solicitud" data-nombre="Solicitud de Crédito">
+
+<!-- ============ SOLICITUD · PÁGINA 1 ============ -->
+<div class="hoja" id="doc-solicitud">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div class="titulo-doc">SOLICITUD DE CRÉDITO<small>PFAE/PM</small></div>
+    <div class="caja-fecha">
+      <div class="et c">Lugar y fecha de elaboración</div>
+      <div class="cuerpo"><input class="v" data-c="lugarFecha" placeholder="Chihuahua, Chih. a __ de ____ de ____"></div>
+    </div>
+  </div>
+
+  <table class="g">
+    <colgroup><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.337%"></colgroup>
+
+    <tr><td class="barra" colspan="12">DATOS GENERALES (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
+
+    <tr><td colspan="12"><span class="et">Nombre completo o razón social</span><input class="v" data-c="nombre"></td></tr>
+
+    <tr>
+      <td colspan="4"><span class="et">Fecha de nacimiento o de constitución (dd/mm/aaaa)</span><input class="v" data-c="fechaNac" placeholder="dd/mm/aaaa"></td>
+      <td colspan="4"><span class="et c">FIEL</span><input class="v" data-c="fiel"></td>
+      <td colspan="4"><span class="et c">Nacionalidad</span><input class="v" data-c="nacionalidad"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et c">Teléfono fijo</span><input class="v" data-c="telFijo"></td>
+      <td colspan="4"><span class="et c">CURP</span><input class="v mayus" data-c="curp" maxlength="18"></td>
+      <td colspan="4"><span class="et">RFC con homoclave</span><input class="v mayus" data-c="rfc" maxlength="13"></td>
+    </tr>
+
+    <tr>
+      <td colspan="8"><span class="et c">Actividad económica / objeto social / Giro mercantil</span><input class="v" data-c="actividad"></td>
+      <td colspan="4"><span class="et c">Sector</span><input class="v" data-c="sector"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et">Nacionalidad del apoderado legal</span><input class="v" data-c="nacionalidadRep"></td>
+      <td colspan="8"><span class="et c">Correo electrónico</span><input class="v" data-c="correo" type="email"></td>
+    </tr>
+
+    <tr><td colspan="12"><span class="et">Nombre completo del apoderado legal / Nombre(s) sin abreviaturas, apellido paterno, apellido materno</span><input class="v" data-c="repLegal"></td></tr>
+
+    <tr><td class="barra" colspan="12">DOMICILIO FISCAL</td></tr>
+
+    <tr>
+      <td colspan="8"><span class="et c">Calle / Avenida / Vía</span><input class="v" data-c="f_calle"></td>
+      <td colspan="2"><span class="et">Número exterior</span><input class="v" data-c="f_numExt"></td>
+      <td colspan="2"><span class="et">Número interior</span><input class="v" data-c="f_numInt"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et">Delegación / Municipio</span><input class="v" data-c="f_municipio"></td>
+      <td colspan="4"><span class="et">Ciudad / Población</span><input class="v" data-c="f_ciudad"></td>
+      <td colspan="4"><span class="et">Colonia / Urbanización</span><input class="v" data-c="f_colonia"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et">Estado / Providencia</span><input class="v estados" data-c="f_estado"></td>
+      <td colspan="4"><span class="et">País / Entidad federativa</span><input class="v" data-c="f_pais" value="México"></td>
+      <td colspan="4"><span class="et c">Código postal</span><input class="v cp" data-c="f_cp" maxlength="5" inputmode="numeric"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et">Superficie de terreno y de construcción (m²)</span><input class="v" data-c="superficie"></td>
+      <td colspan="4"><span class="et">Importe renta mensual (en caso de aplicar)</span><input class="v" data-c="renta"></td>
+      <td colspan="4"><span class="et">Fecha vencimiento de contrato (en caso de aplicar)</span><input class="v" data-c="vencContrato"></td>
+    </tr>
+
+    <tr><td class="barra" colspan="12">TIPO ADMINISTRACIÓN</td></tr>
+    <tr><td class="sub" colspan="5">ACCIONISTAS</td><td class="sub" colspan="7">CONSEJO DE ADMINISTRACIÓN</td></tr>
+    <tr><td class="sub" colspan="4">Nombre</td><td class="sub">%</td><td class="sub" colspan="5">Nombre</td><td class="sub" colspan="2">Puesto</td></tr>
+    <tr><td colspan="4"><input class="v"></td><td><input class="v num"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="4"><input class="v"></td><td><input class="v num"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="4"><input class="v"></td><td><input class="v num"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="4"><input class="v"></td><td><input class="v num"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+
+    <tr><td class="barra" colspan="12">PERSONAS QUE EJERCEN CONTROL (quien toma decisiones y/o cuenta con &lt;25% acciones)</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">NOMBRE</span></td>
+      <td class="enc" colspan="2"><span class="et c">DIRECCIÓN</span></td>
+      <td class="enc" colspan="2"><span class="et c">RFC</span></td>
+      <td class="enc" colspan="2"><span class="et c">CURP</span></td>
+      <td class="enc" colspan="2"><span class="et c">NACIONALIDAD</span></td>
+      <td class="enc"><span class="et c">ACTIVIDAD</span></td>
+      <td class="enc"><span class="et c">TELEFONO</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v mayus"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+
+    <tr><td class="barra" colspan="12">ORGANIGRAMA (Incluir los tres principales niveles de su empresa ejemplo: Nivel 1| Director general| Consejo de administración| Ricardo Alvarado| ralvarado@gmail.com|)</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Nivel jerárquico</span></td>
+      <td class="enc" colspan="2"><span class="et c">Puesto</span></td>
+      <td class="enc" colspan="3"><span class="et c">Jefe directo</span></td>
+      <td class="enc" colspan="3"><span class="et c">Nombre</span></td>
+      <td class="enc" colspan="2"><span class="et c">Teléfono o correo</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+
+    <tr><td class="barra" colspan="12">NUMERO DE COLABORADORES</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Operativos</span></td>
+      <td class="enc" colspan="2"><span class="et c">Administrativos</span></td>
+      <td class="enc" colspan="2"><span class="et c">Ventas</span></td>
+      <td class="enc" colspan="2"><span class="et c">Eventuales</span></td>
+      <td class="enc" colspan="2"><span class="et c">Personal sindicalizado</span></td>
+      <td class="enc" colspan="2"><span class="et c">Total</span></td>
+    </tr>
+    <tr>
+      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input class="v num calc" data-total="colab" readonly tabindex="-1"></td>
+    </tr>
+
+    <tr><td class="barra" colspan="12">ACTIVIDAD VULNERABLE</td></tr>
+    <tr><td colspan="12"><span class="et">¿Realiza actividades catalogadas como Actividades Vulnerables según el Art. 17 de la LFPIORPI?</span>
+      <span class="sn"><input type="radio" name="av1" id="av1s"><label class="bx" for="av1s"></label>SI</span>
+      <span class="sn"><input type="radio" name="av1" id="av1n"><label class="bx" for="av1n"></label>NO</span>
+      <span class="sn">¿Cuál?</span><input class="v" style="display:inline-block;width:60%">
+    </td></tr>
+    <tr><td colspan="12"><span class="et">¿Se encuentra dado de alta en el portal SSPLD?</span>
+      <span class="sn"><input type="radio" name="av2" id="av2s"><label class="bx" for="av2s"></label>SI</span>
+      <span class="sn"><input type="radio" name="av2" id="av2n"><label class="bx" for="av2n"></label>NO</span>
+    </td></tr>
+    <tr><td colspan="12"><span class="et">SI es persona Moral, ¿Tiene designado a un responsable de Cumplimiento?</span>
+      <span class="sn"><input type="radio" name="av3" id="av3s"><label class="bx" for="av3s"></label>SI</span>
+      <span class="sn"><input type="radio" name="av3" id="av3n"><label class="bx" for="av3n"></label>NO</span>
+    </td></tr>
+    <tr><td colspan="12">
+      <span class="sn">¿Cuenta con Manual de Cumplimiento?</span>
+      <span class="sn"><input type="radio" name="av4" id="av4s"><label class="bx" for="av4s"></label>SI</span>
+      <span class="sn"><input type="radio" name="av4" id="av4n"><label class="bx" for="av4n"></label>No</span>
+      <span class="sn">¿Presenta mensualmente los Avisos?</span>
+      <span class="sn"><input type="radio" name="av5" id="av5s"><label class="bx" for="av5s"></label>SI</span>
+      <span class="sn"><input type="radio" name="av5" id="av5n"><label class="bx" for="av5n"></label>No</span>
+    </td></tr>
+
+    <tr><td class="barra" colspan="12">INFORMACIÓN REFERENTE AL CRÉDITO SOLICITADO</td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Tipo de crédito solicitado</span></td><td colspan="10"><input class="v" data-c="tipoCredito"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Monto</span></td><td colspan="4"><input class="v" data-c="montoCredito"></td><td class="lbl" colspan="2"><span class="et c">Moneda</span></td><td colspan="4"><input class="v" value="MXN"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Destino</span></td><td colspan="10"><input class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Plazo</span></td><td colspan="4"><input class="v"></td><td class="lbl" colspan="2"><span class="et c">Gracia</span></td><td colspan="4"><input class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Fuente principal de pago</span></td><td colspan="10"><input class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Garantía</span></td><td colspan="4"><input class="v"></td><td class="lbl" colspan="2"><span class="et c">Garante</span></td><td colspan="4"><input class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Aval (es)</span></td><td colspan="10"><input class="v"></td></tr>
+  </table>
+
+  <div class="pie">Factor GFC Global, S.A. de C.V. SOFOM ENR, Ave. De la Cantera #9301, Col. Las Misiones, Chihuahua, Chih. C.P. 31115, Tel. (614)311-06-14</div>
+</div>
+
+<!-- ============ SOLICITUD · PÁGINA 2 ============ -->
+<div class="hoja">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div class="titulo-doc">SOLICITUD DE CRÉDITO</div>
+    <div class="caja-fecha">
+      <div class="et c">Lugar y fecha de elaboración</div>
+      <div class="cuerpo"><input class="v" data-c="lugarFecha"></div>
+    </div>
+  </div>
+
+  <table class="g">
+    <colgroup><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.337%"></colgroup>
+
+    <tr><td class="barra" colspan="12">DESTINO ESPECÍFICO DEL CRÉDITO</td></tr>
+    <tr>
+      <td class="lbl" colspan="2"><span class="et b">A) CAPITAL DE TRABAJO</span></td>
+      <td colspan="4"><span class="et">Detallar importe, plazo y conceptos específicos tales como Inventarios, financiamiento de cartera, gastos operativos, etc.</span></td>
+      <td colspan="6"><input class="v"></td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2"><span class="et b">B) COMPRA ACTIVOS FIJOS</span></td>
+      <td colspan="4"><span class="et">Detallar valor del equipo a adquirir anexando cotización, descripción, plazo solicitado.</span></td>
+      <td colspan="6"><input class="v"></td>
+    </tr>
+    <tr>
+      <td class="lbl" colspan="2"><span class="et b">C) SUSTITUCIÓN DE PASIVOS</span></td>
+      <td colspan="4"><span class="et">Detallar importe solicitado, plazo, origen del pasivo, vencimiento, acreedor y garantías otorgadas</span></td>
+      <td colspan="6"><input class="v"></td>
+    </tr>
+
+    <tr><td class="barra" colspan="12">GARANTÍAS OFRECIDAS</td></tr>
+    <tr>
+      <td class="enc" colspan="3"><span class="et c b">Tipo de inmueble o descripción</span></td>
+      <td class="enc" colspan="5"><span class="et c b">Domicilio</span></td>
+      <td class="enc" colspan="2"><span class="et c b">Valor</span></td>
+      <td class="enc" colspan="2"><span class="et c b">Datos de registro</span></td>
+    </tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
+
+    <tr><td class="barra" colspan="12">PRODUCTOS</td></tr>
+    <tr>
+      <td class="enc" colspan="3"><span class="et c b">Principales productos que vende</span></td>
+      <td class="enc" colspan="4"><span class="et c b">Capacidad instalada</span></td>
+      <td class="enc" colspan="3"><span class="et c b">Aplicaciones (uso final del producto)</span></td>
+      <td class="enc" colspan="2"><span class="et c b">% ingreso</span></td>
+    </tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+
+    <tr><td class="barra" colspan="12">MERCADO</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Principales clientes</span></td>
+      <td class="enc" colspan="2"><span class="et c">Plazos de venta</span></td>
+      <td class="enc" colspan="2"><span class="et c">% Ventas Totales</span></td>
+      <td class="enc" colspan="2"><span class="et c">Principales proveedores</span></td>
+      <td class="enc" colspan="2"><span class="et c">Plazos de compra</span></td>
+      <td class="enc" colspan="2"><span class="et c">% de Compras</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Número de clientes</span></td>
+      <td colspan="2"><input class="v num"></td>
+      <td class="sinborde" colspan="2"></td>
+      <td class="enc" colspan="2"><span class="et c">Número de proveedores</span></td>
+      <td colspan="2"><input class="v num"></td>
+      <td class="sinborde" colspan="2"></td>
+    </tr>
+
+    <tr><td class="barra" colspan="12">PROVEEDOR</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Proveedor</span></td>
+      <td class="enc" colspan="5"><span class="et c">Domicilio</span></td>
+      <td class="enc" colspan="3"><span class="et c">Funcionario De Contacto</span></td>
+      <td class="enc" colspan="2"><span class="et c">Teléfono</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v" data-c="prov1Nombre"></td><td colspan="5"><input class="v" data-c="prov1Domicilio"></td><td colspan="3"><input class="v" data-c="prov1Contacto"></td><td colspan="2"><input class="v" data-c="prov1Telefono"></td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Proveedor</span></td>
+      <td class="enc" colspan="5"><span class="et c">Domicilio</span></td>
+      <td class="enc" colspan="3"><span class="et c">Funcionario De Contacto</span></td>
+      <td class="enc" colspan="2"><span class="et c">Teléfono</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v" data-c="prov2Nombre"></td><td colspan="5"><input class="v" data-c="prov2Domicilio"></td><td colspan="3"><input class="v" data-c="prov2Contacto"></td><td colspan="2"><input class="v" data-c="prov2Telefono"></td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Institución Financiera</span></td>
+      <td class="enc" colspan="5"><span class="et c">Domicilio</span></td>
+      <td class="enc" colspan="3"><span class="et c">Funcionario De Contacto</span></td>
+      <td class="enc" colspan="2"><span class="et c">Teléfono</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v" data-c="bancoNombre"></td><td colspan="5"><input class="v" data-c="bancoDomicilio"></td><td colspan="3"><input class="v" data-c="bancoContacto"></td><td colspan="2"><input class="v" data-c="bancoTelefono"></td></tr>
+
+    <tr><td class="barra" colspan="12">CRÉDITOS CON INSTITUCIONES FINANCIERAS O NO FINANCIERAS</td></tr>
+    <tr>
+      <td class="enc" colspan="2"><span class="et c">Institución</span></td>
+      <td class="enc"><span class="et c">Moneda</span></td>
+      <td class="enc" colspan="2"><span class="et c">Línea autorizada</span></td>
+      <td class="enc"><span class="et c">Saldo</span></td>
+      <td class="enc" colspan="2"><span class="et c">Tipo de Crédito</span></td>
+      <td class="enc"><span class="et c">Garantía</span></td>
+      <td class="enc"><span class="et c">Tasa</span></td>
+      <td class="enc"><span class="et c">Garantía</span></td>
+      <td class="enc"><span class="et c">Destino</span></td>
+    </tr>
+    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
+
+    <tr><td class="barra" colspan="12">SOLICITANTE</td></tr>
+    <tr>
+      <td colspan="6" style="padding:4px 6px">
+        <div class="legal-1">
+          <p>1. Declaro bajo protesta de decir verdad que los datos proporcionados son correctos y tomo conocimiento de que cualquier omisión o falsedad de los mismos, causara la cancelación automática de este trámite, obligándome a cubrir los gastos que se hayan originado.</p>
+          <p>2. Quedo enterado de que Factor GFC Global S.A. DE C.V. SOFOM E.N.R., no contrae ninguna obligación a la entrega y recepción de esta Solicitud, y lo autorizo para que la conserve independientemente de la resolución final del crédito.</p>
+          <p>3. En caso de cambio de domicilio para notificaciones, me comprometo a informar a Factor GFC Global S.A. DE C.V. SOFOM E.N.R., en un término de cinco días hábiles contados a partir de la fecha de dicho cambio.</p>
+          <p>4. Declaro que el origen y procedencia de los fondos que por cuenta propia o por cuenta de mi representada habré de operar u opero o que habrá de operar u opera mi representada respecto de los productos y servicios que se solicitan son de mi propiedad o son propiedad de mi representada y proceden de actividades lícitas y que terceros no utilizarán recursos provenientes de actividades ilícitas para operar con mi consentimiento o el de mi representada en los productos, cuentas, contratos o servicios donde actúo y opero o donde actúa y opera mi representada, también manifiesto que no se realizarán transacciones destinadas a favorecer actividades ilícitas.</p>
+          <p>5. Manifiesto que la información y/o datos y/o documentos de identificación otorgados en copia fotostática son verídicos y autorizo a que se corrobore lo anterior de estimarse conveniente.</p>
+        </div>
+      </td>
+      <td colspan="6" style="padding:4px 6px">
+        <div class="legal-1">
+          <p>6. Autorizo expresamente a esta institución a que comparta mi información y/o datos y/o documentos o la de mi representada con cualquiera de las entidades que formen parte directa o indirectamente del Factor GFC Global S.A. DE C.V. SOFOM E.N.R., y/o aquellas respecto de las cuales dichas entidades sean de manera directa o indirecta accionistas mayoritarios, para efectos de contratar, en su caso, cualquier producto o servicio financiero con alguna de dichas entidades o con motivo de la relación que se mantiene o se llegue a mantener con las mismas, la autorización que se otorga no implica la aceptación para que esta información, datos y documentación se utilice por terceros distintos de las entidades antes mencionadas.</p>
+          <p>7. Acepto de conformidad liquidar al momento de la firma de las escrituras respectivas, los gastos que se generen por concepto de investigación de crédito, avalúo, inspección de obra (en su caso), apertura de crédito, gastos y honorarios notariales.</p>
+        </div>
+        <div class="firma" style="margin-top:38px">
+          <input class="nombre-firma" data-eco="repLegal|nombre" placeholder="Nombre completo o razón social" style="font-size:7.6pt;width:82%;margin-left:auto">
+          <div style="display:flex;align-items:flex-end;justify-content:center;gap:4px">
+            <span style="font-size:8pt">X</span>
+            <div class="raya" style="width:82%;margin:0"></div>
+          </div>
+          <div class="cap" style="margin-top:3px">NOMBRE Y FIRMA<br>DEL REPRESENTANTE LEGAL O DEL ACREDITADO</div>
+          <div class="nota">Firma autógrafa al imprimir.</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr><td class="barra" colspan="12">DOCUMENTACIÓN QUE DEBERÁ ANEXARSE A ESTA SOLICITUD</td></tr>
+  </table>
+
+  <div class="pie">*Te invitamos a conocer nuestro aviso de privacidad para el tratamiento y uso de datos personales en nuestra página http://www.factorgfc.com/aviso-de-privacidad</div>
+</div>
+
+</section>
+<!-- ============ CARTA · PERSONAS QUE EJERCEN CONTROL ============ -->
+<section class="doc" data-doc="carta-control" data-nombre="Carta de personas que ejercen control">
+<div class="hoja" id="doc-carta-control">
+  <div class="memb simple">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div></div>
+  </div>
+
+  <div style="margin:14px 0 20px;font-size:9pt">
+    <div style="display:flex;gap:6px;align-items:flex-end;max-width:9cm">
+      <span>Fecha:</span>
+      <input class="v" data-c="fecha" style="border-bottom:1px solid #000">
+    </div>
+  </div>
+
+  <div style="font-size:9pt;line-height:1.5;margin-bottom:16px">
+    <strong>Factor GFC Global, S.A. de C.V. SOFOM, E.N.R.</strong><br>
+    Presente.-
+  </div>
+
+  <div style="font-size:9pt;line-height:1.6;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px">
+    <span>Hacemos de su conocimiento que las siguientes personas físicas son quienes ejercen control sobre</span>
+    <input class="v" data-c="nombre" style="flex:1 1 8cm;border-bottom:1px solid #000"><span>:</span>
+  </div>
+
+  <table class="g">
+    <colgroup><col style="width:13%"><col style="width:8%"><col style="width:17%"><col style="width:8%"><col style="width:10%"><col style="width:11%"><col style="width:8%"><col style="width:9%"><col style="width:8%"><col style="width:8%"></colgroup>
+    <tr>
+      <td class="sub"><span class="et c b">Nombre completo sin abreviaturas</span></td>
+      <td class="sub"><span class="et c b">Fecha nacimiento (dd/mm/aa)</span></td>
+      <td class="sub"><span class="et c b">Domicilio (calle, núm. interior y exterior, colonia, municipio, estado, país, código postal)</span></td>
+      <td class="sub"><span class="et c b">Nacionalidad</span></td>
+      <td class="sub"><span class="et c b">RFC</span></td>
+      <td class="sub"><span class="et c b">CURP</span></td>
+      <td class="sub"><span class="et c b">FIEL</span></td>
+      <td class="sub"><span class="et c b">Actividad, giro o profesión</span></td>
+      <td class="sub"><span class="et c b">Teléfono</span></td>
+      <td class="sub"><span class="et c b">Correo electrónico</span></td>
+    </tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v mayus"></td><td><input class="v mayus"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v mayus"></td><td><input class="v mayus"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v mayus"></td><td><input class="v mayus"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v mayus"></td><td><input class="v mayus"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v mayus"></td><td><input class="v mayus"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td><td><input class="v"></td></tr>
+  </table>
+
+  <div style="font-size:9pt;line-height:1.6;margin-top:26px">
+    Sin más por el momento<br>
+    Quedo a sus órdenes
+  </div>
+
+  <div class="firma" style="margin-top:56px">
+    <input class="nombre-firma" data-eco="repLegal|nombre" placeholder="Nombre completo o razón social" style="width:7cm">
+    <div class="raya"></div>
+    <div class="cap">FIRMA</div>
+    <div style="font-size:8pt;margin-top:2px">Rep. Legal</div>
+    <div style="display:flex;justify-content:center;gap:6px;align-items:flex-end;margin-top:6px">
+      <span style="font-size:8pt">Empresa</span>
+      <input class="v" data-c="nombre" style="max-width:8cm;border-bottom:1px solid #000">
+    </div>
+    <div class="nota">Firma autógrafa al imprimir.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============ KYC · CLIENTE (ANEXO 1 VERSIÓN 4) ============ -->
+<section class="doc" data-doc="kyc-cliente" data-nombre="KYC Cliente (Anexo 1)">
+<div class="hoja" id="doc-kyc-cliente">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div class="titulo-doc">FORMATO DE CONOCIMIENTO DEL CLIENTE<small>KYC "Know Your Client"</small></div>
+    <div class="caja-fecha">
+      <div class="et c">Lugar y fecha de elaboración</div>
+      <div class="cuerpo"><input class="v" data-c="lugarFecha"></div>
+    </div>
+  </div>
+
+  <table class="g">
+    <colgroup><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.337%"></colgroup>
+
+    <tr><td class="barra negra" colspan="12" style="text-align:center">CLIENTE</td></tr>
+    <tr>
+      <td colspan="4" style="text-align:center;padding:4px">
+        <span class="sn">Persona Moral <input type="radio" name="kycTipo" id="kycPM"><label class="bx grande" for="kycPM"></label></span>
+      </td>
+      <td colspan="4" style="text-align:center;padding:4px">
+        <span class="sn">Persona Física <input type="radio" name="kycTipo" id="kycPF"><label class="bx grande" for="kycPF"></label></span>
+      </td>
+      <td colspan="4"><span class="et c">Fecha</span><input class="v" data-c="fecha"></td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">DATOS GENERALES (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
+    <tr><td colspan="12"><span class="et">Nombre completo / Nombre(s) sin abreviaturas, apellido paterno, apellido materno / Razón Social</span><input class="v" data-c="nombre"></td></tr>
+
+    <tr>
+      <td colspan="3"><span class="et c">Fecha de nacimiento / Fecha de Constitución (dd/mm/aaaa)</span><input class="v" data-c="fechaNac" placeholder="dd/mm/aaaa"></td>
+      <td colspan="2"><span class="et c">País de nacimiento / constitución</span><input class="v" data-c="paisNac" value="México"></td>
+      <td colspan="2"><span class="et c">Entidad federativa de nacimiento / constitución</span><input class="v estados" data-c="entidadNac"></td>
+      <td colspan="3"><span class="et c">País de residencia</span><input class="v" data-c="paisResidencia" value="México"></td>
+      <td colspan="2"><span class="et c">Nacionalidad</span><input class="v" data-c="nacionalidad"></td>
+    </tr>
+
+    <tr>
+      <td colspan="3"><span class="et c">Género (Femenino/Masculino)</span><select class="v" data-c="genero"><option value=""></option><option>Femenino</option><option>Masculino</option><option>N/A</option></select></td>
+      <td colspan="5"><span class="et c">CURP</span><input class="v mayus" data-c="curp" maxlength="18"></td>
+      <td colspan="4"><span class="et c">RFC con homoclave</span><input class="v mayus" data-c="rfc" maxlength="13"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et c">Actividad económica que desempeña / Giro empresarial detallado</span><input class="v" data-c="actividad"></td>
+      <td colspan="2"><span class="et c">Ocupación / Profesión</span><input class="v" data-c="ocupacion"></td>
+      <td colspan="2"><span class="et c">Teléfono fijo</span><input class="v" data-c="telFijo"></td>
+      <td colspan="2"><span class="et c">Teléfono celular (opcional)</span><input class="v" data-c="telCel"></td>
+      <td colspan="2"><span class="et c">Correo electrónico</span><input class="v" data-c="correo"></td>
+    </tr>
+
+    <tr>
+      <td colspan="3"><span class="et c">Tipo y Número de Forma Migratoria (solo aplica para extranjeros)</span><input class="v" data-c="formaMigratoria"></td>
+      <td colspan="3"><span class="et c">FIEL</span><input class="v" data-c="fiel"></td>
+      <td colspan="3"><span class="et c">Numero de Identificació Fiscal</span><input class="v" data-c="nif"></td>
+      <td colspan="3"><span class="et c">Pais que lo asigna</span><input class="v" data-c="paisNif"></td>
+    </tr>
+
+    <tr>
+      <td colspan="7"><span class="et c">En caso de Persona Moral, indicar del Representante Legal nombre completo sin abreviaturas, apellido paterno, apellido materno</span><input class="v" data-c="repLegal"></td>
+      <td colspan="5"><span class="et c">Nacionalidad del Representante Legal</span><input class="v" data-c="nacionalidadRep"></td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">DOMICILIO PARTICULAR (Correspondiente a su lugar de residencia)</td></tr>
+    <tr>
+      <td colspan="8"><span class="et c">Calle / Avenida / Vía</span><input class="v" data-c="p_calle"></td>
+      <td colspan="2"><span class="et c">Número exterior</span><input class="v" data-c="p_numExt"></td>
+      <td colspan="2"><span class="et c">Número interior</span><input class="v" data-c="p_numInt"></td>
+    </tr>
+    <tr>
+      <td colspan="4"><span class="et c">Delegación / Municipio</span><input class="v" data-c="p_municipio"></td>
+      <td colspan="4"><span class="et c">Ciudad / Población</span><input class="v" data-c="p_ciudad"></td>
+      <td colspan="4"><span class="et c">Colonia / Urbanización</span><input class="v" data-c="p_colonia"></td>
+    </tr>
+    <tr>
+      <td colspan="4"><span class="et c">Estado</span><input class="v estados" data-c="p_estado"></td>
+      <td colspan="4"><span class="et c">País</span><input class="v" data-c="p_pais" value="México"></td>
+      <td colspan="4"><span class="et c">Código postal</span><input class="v cp" data-c="p_cp" maxlength="5" inputmode="numeric"></td>
+    </tr>
+    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input class="v"></td></tr>
+
+    <tr><td class="barra negra" colspan="12">DATOS COMPLEMENTARIOS - Perfil transaccional</td></tr>
+    <tr><td colspan="12"><span class="et">Especificar cual será el origen de los recursos con el cual pagará el crédito o gastos (comisión, interés, notaria, etc.) de algún servicio con Factor GFC</span><input class="v" data-c="origenRecursos"></td></tr>
+    <tr><td colspan="12"><span class="et">Especificar para que será destinado el recurso proveniente del crédito o servicio solicitada a Factor GFC</span><input class="v" data-c="destinoCredito"></td></tr>    <tr>
+      <td colspan="7"><span class="et">¿Cuál es el producto o servicio que está tramitando con Factor GFC?</span><input class="v" data-c="tipoCredito"></td>
+      <td colspan="5"><span class="et">¿Realizará pagos directamente a Factor GFC en efectivo?</span>
+        <span class="sn"><input type="radio" name="kycEfectivo" id="kycEfS"><label class="bx" for="kycEfS"></label>Si</span>
+        <span class="sn"><input type="radio" name="kycEfectivo" id="kycEfN"><label class="bx" for="kycEfN"></label>No</span>
+      </td>
+    </tr>
+    <tr><td colspan="12"><span class="et">¿Cuál es el importe total del(os) crédito(s) o servicio(s) nuevos solicitado(s) a Factor GFC?</span><input class="v" data-c="montoCredito"></td></tr>
+    <tr><td colspan="12"><span class="et">¿Tiene créditos vigentes con Factor GFC, aparte de la nueva solicitud? De ser así, especificar por que importe fueron y bajo que tipo de crédito</span><input class="v" data-c="creditosVigentes"></td></tr>
+    <tr><td colspan="12"><span class="et">Considerando la nueva solicitud y los créditos vigentes, ¿aproximadamente por cuanto será su pago más alto mensual?</span><input class="v" data-c="pagoMensualMaximo"></td></tr>
+    <tr><td colspan="12"><span class="et">¿Cuántos pagos, disposiciones y/o movimientos estima realizar como máximo en un mes?</span><input class="v" data-c="movimientosMaximos"></td></tr>
+    <tr>
+      <td colspan="4"><span class="et c">"Baja" de 1 a 2</span>
+        <div style="text-align:center"><span class="sn"><input type="radio" name="kycFrec" id="kycFrecB"><label class="bx" for="kycFrecB"></label></span></div>
+      </td>
+      <td colspan="4"><span class="et c">"Media" de 3 a 5</span>
+        <div style="text-align:center"><span class="sn"><input type="radio" name="kycFrec" id="kycFrecM"><label class="bx" for="kycFrecM"></label></span></div>
+      </td>
+      <td colspan="4"><span class="et c">"Alta" más de 5</span>
+        <div style="text-align:center"><span class="sn"><input type="radio" name="kycFrec" id="kycFrecA"><label class="bx" for="kycFrecA"></label></span></div>
+      </td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">DATOS COMPLEMENTARIOS - Declaratoria</td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
+      <span class="sn"><input type="radio" name="kycD1" id="kycD1s"><label class="bx" for="kycD1s"></label>Si</span>
+      <span class="sn"><input type="radio" name="kycD1" id="kycD1n"><label class="bx" for="kycD1n"></label>No</span>
+      <span class="et" style="display:inline">(De ser así, especificar la dependencia, el puesto, las principales funciones y periodo de ejercicio)</span>
+      <input class="v" data-c="cargoPublicoDetalle">
+    </td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Su conyugue o algún pariente por consanguinidad o afinidad en segundo grado, desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
+      <span class="sn"><input type="radio" name="kycD2" id="kycD2s"><label class="bx" for="kycD2s"></label>Si</span>
+      <span class="sn"><input type="radio" name="kycD2" id="kycD2n"><label class="bx" for="kycD2n"></label>No</span>
+      <input class="v">
+    </td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Alguna persona distinta a usted hará uso, obtendrá los beneficios o decidirá sobre el uso, aprovechamiento o destino del recurso proveniente del crédito solicitado?</span>
+      <span class="sn"><input type="radio" name="kycD3" id="kycD3s"><label class="bx" for="kycD3s"></label>Si</span>
+      <span class="sn"><input type="radio" name="kycD3" id="kycD3n"><label class="bx" for="kycD3n"></label>No</span>
+      <span class="et" style="display:inline">(De ser así, especificar el nombre de la persona física o moral y el motivo)</span>
+      <input class="v">
+    </td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Alguna persona física o moral distinta a usted aportará, pagará o depósitará con sus propios recursos a la SOFOM para el cumplimiento del presente crédito, así como los gastos y comisiones que se generen del mismo?</span>
+      <span class="sn"><input type="radio" name="kycD4" id="kycD4s"><label class="bx" for="kycD4s"></label>Si</span>
+      <span class="sn"><input type="radio" name="kycD4" id="kycD4n"><label class="bx" for="kycD4n"></label>No</span>
+      <span class="et" style="display:inline">(De ser así, especificar el nombre de la persona física o moral y especificar el motivo)</span>
+      <input class="v">
+    </td></tr>
+    <tr><td colspan="12" style="padding:6px 4px 26px">
+      <span class="et">Declaro que la información y documentación presentada es verídica, que actúo por cuenta propia y que el origen de mis recursos son provenientes de actividades lícitas.</span>
+      <div style="margin-top:34px;width:8cm">
+        <input class="nombre-firma" data-eco="nombre" placeholder="Nombre completo o razón social" style="font-size:8pt">
+        <div style="border-top:1px solid #000"></div>
+        <div style="text-align:center;font-size:7.4pt;margin-top:2px">Nombre completo y firma</div>
+      </div>
+    </td></tr>
+  </table>
+
+  <div style="display:flex;justify-content:space-between;font-size:7pt;font-weight:bold;font-style:italic;margin-top:6px">
+    <span>* El presente formato será evidencia de la entrevista personal con el cliente</span>
+    <span>Anexo 1&nbsp;&nbsp;&nbsp;&nbsp;Versión 4</span>
+  </div>
+</div>
+</section>
+<!-- ============ KYC · PROPIETARIO REAL (ANEXO 2 VERSIÓN 3) ============ -->
+<section class="doc" data-doc="kyc-propietario" data-nombre="KYC Propietario Real (Anexo 2)">
+<div class="hoja" id="doc-kyc-propietario">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div class="titulo-doc">FORMATO DE CONOCIMIENTO DEL CLIENTE<small>KYC "Know Your Client"</small></div>
+    <div>
+      <div style="text-align:right;font-weight:bold;font-size:10pt;margin-bottom:5px">PROPIETARIO REAL</div>
+      <div class="caja-fecha">
+      <div class="et c">Lugar y fecha de elaboración</div>
+      <div class="cuerpo"><input class="v" data-c="lugarFecha"></div>
+    </div>
+    </div>
+  </div>
+
+  <table class="g">
+    <colgroup><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%"><col style="width:8.337%"></colgroup>
+
+    <tr><td class="barra" colspan="10">&nbsp;</td><td class="barra" colspan="2">Fecha</td></tr>
+    <tr>
+      <td colspan="5" style="text-align:right;padding:4px">
+        <span class="sn">Persona Física <input type="radio" name="prTipo" id="prPF"><label class="bx grande" for="prPF"></label></span>
+      </td>
+      <td colspan="5" style="padding:4px">
+        <span class="sn">Persona moral <input type="radio" name="prTipo" id="prPM"><label class="bx grande" for="prPM"></label></span>
+      </td>
+      <td colspan="2"><input class="v" data-c="fecha"></td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">Clasificacion de la persona fisica o moral (Seleccionar la(s) que apliquen)</td></tr>
+    <tr>
+      <td colspan="4" style="padding:5px"><span class="sn">Obligado solidario y/o Aval <input type="checkbox" id="cl1"><label class="bx grande" for="cl1"></label></span></td>
+      <td colspan="4" style="padding:5px"><span class="sn">Representante Legal <input type="checkbox" id="cl2"><label class="bx grande" for="cl2"></label></span></td>
+      <td colspan="4" style="padding:5px"><span class="sn">Proveedor de Recursos <input type="checkbox" id="cl3"><label class="bx grande" for="cl3"></label></span></td>
+    </tr>
+    <tr>
+      <td colspan="4" style="padding:5px"><span class="sn">Garante <input type="checkbox" id="cl4"><label class="bx grande" for="cl4"></label></span></td>
+      <td colspan="4" style="padding:5px"><span class="sn">Propietario real <input type="checkbox" id="cl5"><label class="bx grande" for="cl5"></label></span></td>
+      <td colspan="4" style="padding:5px"><span class="sn">Coacreditado <input type="checkbox" id="cl6"><label class="bx grande" for="cl6"></label></span></td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">DATOS GENERALES (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
+    <tr><td colspan="12"><span class="et">Nombre completo / Nombre(s) sin abreviaturas, <b>apellido paterno, apellido materno / Razón Social</b></span><input class="v" data-c="nombre"></td></tr>
+
+    <tr>
+      <td colspan="2"><span class="et c">Fecha de nacimiento / Constitución (dd/mm/aaaa)</span><input class="v" data-c="fechaNac" placeholder="dd/mm/aaaa"></td>
+      <td colspan="3"><span class="et c">RFC con homoclave</span><input class="v mayus" data-c="rfc" maxlength="13"></td>
+      <td colspan="1"><span class="et c">País de nacimiento / Constitución</span><input class="v" data-c="paisNac" value="México"></td>
+      <td colspan="2"><span class="et c">Entidad federativa de nacimiento / constitución</span><input class="v estados" data-c="entidadNac"></td>
+      <td colspan="2"><span class="et c">País de residencia</span><input class="v" data-c="paisResidencia" value="México"></td>
+      <td colspan="2"><span class="et c">Nacionalidad</span><input class="v" data-c="nacionalidad"></td>
+    </tr>
+
+    <tr>
+      <td colspan="2"><span class="et c">Género</span><select class="v" data-c="genero"><option value=""></option><option>Femenino</option><option>Masculino</option><option>N/A</option></select></td>
+      <td colspan="3"><span class="et c">CURP</span><input class="v mayus" data-c="curp" maxlength="18"></td>
+      <td colspan="3"><span class="et c">Ocupación / Profesión</span><input class="v" data-c="ocupacion"></td>
+      <td colspan="4"><span class="et c">Actividad económica que desempeña / Giro empresarial detallado</span><input class="v" data-c="actividad"></td>
+    </tr>
+
+    <tr>
+      <td colspan="2"><span class="et c">FIEL</span><input class="v" data-c="fiel"></td>
+      <td colspan="3"><span class="et c">Numero de Identificación Fiscal</span><input class="v" data-c="nif"></td>
+      <td colspan="2"><span class="et c">Pais que lo asigna</span><input class="v" data-c="paisNif"></td>
+      <td colspan="3"><span class="et c">Teléfono fijo</span><input class="v" data-c="telFijo"></td>
+      <td colspan="2"><span class="et c">Teléfono celular (opcional)</span><input class="v" data-c="telCel"></td>
+    </tr>
+
+    <tr>
+      <td colspan="4"><span class="et c">Correo electrónico</span><input class="v" data-c="correo"></td>
+      <td colspan="4"><span class="et c">Estado civil</span><input class="v" data-c="estadoCivil"></td>
+      <td colspan="4"><span class="et c">Tipo y numero de Forma Migratoria (Solo aplica para extranjeros)</span><input class="v" data-c="formaMigratoria"></td>
+    </tr>
+
+    <tr>
+      <td colspan="7"><span class="et c">Nombre completo del apoderado legal / Nombre(s) sin abreviaturas, apellido paterno, apellido materno</span><input class="v" data-c="repLegal"></td>
+      <td colspan="5"><span class="et c">Nacionalidad del Representante Legal</span><input class="v" data-c="nacionalidadRep"></td>
+    </tr>
+
+    <tr>
+      <td colspan="8"><span class="et c">Calle / Avenida / Vía</span><input class="v" data-c="p_calle"></td>
+      <td colspan="2"><span class="et c">Número exterior</span><input class="v" data-c="p_numExt"></td>
+      <td colspan="2"><span class="et c">Número interior</span><input class="v" data-c="p_numInt"></td>
+    </tr>
+    <tr>
+      <td colspan="4"><span class="et c">Delegación / Municipio</span><input class="v" data-c="p_municipio"></td>
+      <td colspan="4"><span class="et c">Ciudad / Población</span><input class="v" data-c="p_ciudad"></td>
+      <td colspan="4"><span class="et c">Colonia / Urbanización</span><input class="v" data-c="p_colonia"></td>
+    </tr>
+    <tr>
+      <td colspan="4"><span class="et c">Estado / Provincia</span><input class="v estados" data-c="p_estado"></td>
+      <td colspan="4"><span class="et c">País / Entidad federativa</span><input class="v" data-c="p_pais" value="México"></td>
+      <td colspan="4"><span class="et c">Código postal</span><input class="v cp" data-c="p_cp" maxlength="5" inputmode="numeric"></td>
+    </tr>
+    <tr><td colspan="12"><span class="et">En caso de no ser residente en México, especificar las razones por las que decidió celebrar créditos o servicios con Factor GFC en México</span><input class="v"></td></tr>
+
+    <tr><td class="barra negra" colspan="12">Informacion general de la solicitud de credito (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
+    <tr><td colspan="12"><span class="et">Nombre / Razón social del acreditado bajo el cual se solicitó el crédito o servicio con Factor GFC Global</span><input class="v" data-c="acreditado"></td></tr>
+    <tr><td colspan="12"><span class="et">Tipo e importe del(os) crédito(s) o servicio solicitada a Factor GFC Global</span><input class="v"></td></tr>
+    <tr><td colspan="12"><span class="et">Especificar para que será destinado el recurso proveniente del crédito o servicio solicitado a Factor GFC</span><input class="v"></td></tr>
+    <tr><td colspan="12">
+      <span class="et" style="display:inline">¿En lo personal, tiene usted créditos vigentes con Factor GFC?</span>
+      <span class="sn"><input type="radio" name="prCred" id="prCredS"><label class="bx grande" for="prCredS"></label>SI</span>
+      <span class="sn"><input type="radio" name="prCred" id="prCredN"><label class="bx grande" for="prCredN"></label>No</span>
+    </td></tr>
+    <tr><td colspan="12"><span class="et">De ser así, especificar por que importe son y bajo que tipo</span><input class="v"></td></tr>
+
+    <tr><td class="barra negra" colspan="12">Exclusivo para (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica):</td></tr>
+    <tr><td class="sub" colspan="6">Propietario real</td><td class="sub" colspan="6">Proveedor de recursos</td></tr>
+    <tr>
+      <td colspan="6"><span class="et c">Razón por las cuales funge como Propietario Real</span></td>
+      <td colspan="6"><span class="et c">Razón por las cuales esta aportando pagos o depósitos al crédito solicidato a Factor GFC</span></td>
+    </tr>
+    <tr>
+      <td colspan="6"><textarea class="v" rows="4"></textarea></td>
+      <td colspan="6"><textarea class="v" rows="4"></textarea></td>
+    </tr>
+
+    <tr><td class="barra negra" colspan="12">DATOS COMPLEMENTARIOS - Declaratoria (No se deberán dejar espacios en blanco. En caso de no aplicar alguna casilla, marcar con "N/A" No Aplica)</td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
+      <span class="sn"><input type="radio" name="prD1" id="prD1s"><label class="bx" for="prD1s"></label>Si</span>
+      <span class="sn"><input type="radio" name="prD1" id="prD1n"><label class="bx" for="prD1n"></label>No</span>
+      <span class="et" style="display:inline">(De ser así, especificar la dependencia, el puesto, las principales funciones y periodo de ejercicio)</span>
+      <input class="v">
+    </td></tr>
+    <tr><td colspan="12">
+      <span class="et">¿Su conyugue o algún pariente por consanguinidad o afinidad en segundo grado, desempeña o desempeñó algún cargo público a nivel federal, estatal, municipal en México o en algun país extranjero?</span>
+      <span class="sn"><input type="radio" name="prD2" id="prD2s"><label class="bx" for="prD2s"></label>Si</span>
+      <span class="sn"><input type="radio" name="prD2" id="prD2n"><label class="bx" for="prD2n"></label>No</span>
+    </td></tr>
+    <tr><td colspan="12" style="padding:6px 4px 26px">
+      <span class="et">Declaro que la información y documentación presentada es verídica, que actúo por cuenta propia y que el origen de mis recursos son provenientes de actividades lícitas.</span>
+      <div style="margin-top:34px;width:8cm">
+        <input class="nombre-firma" data-eco="nombre" placeholder="Nombre completo o razón social" style="font-size:8pt">
+        <div style="border-top:1px solid #000"></div>
+        <div style="text-align:center;font-size:7.4pt;margin-top:2px">Nombre completo y firma</div>
+      </div>
+    </td></tr>
+  </table>
+
+  <div style="display:flex;justify-content:space-between;font-size:7pt;font-weight:bold;font-style:italic;margin-top:6px">
+    <span>* El presente formato será evidencia de la entrevista personal con el cliente</span>
+    <span>Anexo 2&nbsp;&nbsp;&nbsp;&nbsp;Versión 3</span>
+  </div>
+</div>
+</section>
+
+<!-- ============ SITUACIÓN PATRIMONIAL · PERSONAS FÍSICAS ============ -->
+<section class="doc" data-doc="situacion-patrimonial" data-nombre="Situación Patrimonial PF">
+<div class="hoja" id="doc-situacion-patrimonial">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div class="titulo-doc">SITUACIÓN PATRIMONIAL<small style="font-weight:bold;font-size:11pt">PERSONAS FÍSICAS</small></div>
+    <div class="caja-fecha">
+      <div class="et c">Nombre del acreditado / aval</div>
+      <div class="cuerpo"><input class="v" data-c="nombre"></div>
+    </div>
+  </div>
+
+  <table class="g" style="margin-bottom:8px">
+    <tr>
+      <td style="width:16%"><span class="et c">Acreditado</span></td>
+      <td style="width:6%;text-align:center"><span class="sn"><input type="radio" name="spTipo" id="spAcr"><label class="bx grande" for="spAcr"></label></span></td>
+      <td style="width:22%"><span class="et c">Aval/ Obligado Solidario</span></td>
+      <td style="width:6%;text-align:center"><span class="sn"><input type="radio" name="spTipo" id="spAval"><label class="bx grande" for="spAval"></label></span></td>
+      <td style="width:20%"><span class="et c">Otro (Especificar )</span></td>
+      <td><input class="v"></td>
+    </tr>
+  </table>
+
+  <div style="display:flex;gap:8px;align-items:flex-start">
+
+    <table class="g" style="flex:1 1 50%">
+      <colgroup><col style="width:56%"><col style="width:22%"><col style="width:22%"></colgroup>
+      <tr><td class="barra" colspan="3">BALANCE PATRIMONIAL</td></tr>
+      <tr><td><span class="et">Fecha de Balance Patrimonial</span></td><td colspan="2"><input class="v"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">ACTIVOS</td></tr>
+      <tr><td></td><td class="sub">Total</td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Efectivo</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Cuentas por cobrar</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Documentos por cobrar</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Hipotecas y fideicomisos</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Inversiones en Acciones</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Bienes inmuebles (llenar detalle)</span></td><td><input class="v num money calc" data-total="inm" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Bienes Muebles</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Activos</span></td><td><input class="v num money" data-suma="act"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" style="text-align:left">TOTAL DE ACTIVOS</td><td><input class="v num money calc" data-total="act" data-extra="inm" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">PASIVOS</td></tr>
+      <tr><td><span class="et">Cuentas por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Documentos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Impuestos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Prestamos por pagar</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros pasivos</span></td><td><input class="v num money" data-suma="pas"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" style="text-align:left">TOTAL DE PASIVOS</td><td><input class="v num money calc" data-total="pas" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
+      <tr><td class="sinborde" colspan="3" style="height:10px"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">CAPITAL</td></tr>
+      <tr><td><span class="et">Total de Activos menos Total de Pasivos</span></td><td colspan="2"><input class="v num money calc" data-resta="act-pas" readonly tabindex="-1"></td></tr>
+    </table>
+
+    <table class="g" style="flex:1 1 50%">
+      <colgroup><col style="width:56%"><col style="width:22%"><col style="width:22%"></colgroup>
+      <tr><td class="barra" colspan="3">ESTADOS DE RESULTADOS</td></tr>
+      <tr><td><span class="et">Periodo del Estado de Resultados</span></td><td colspan="2"><input class="v"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">INGRESOS ANUALES</td></tr>
+      <tr><td></td><td class="sub">Total</td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Sueldos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Honorarios</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Dividendos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Intereses</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Rentas</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros ingresos</span></td><td><input class="v num money" data-suma="ing"></td><td class="sinborde"></td></tr>
+      <tr><td style="height:16px"></td><td></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" style="text-align:left">Ingresos Anuales Totales</td><td><input class="v num money calc" data-total="ing" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">GASTOS ANUALES</td></tr>
+      <tr><td><span class="et">Impuesto Predial</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Impuestos</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Pagos Prestamos Hip.</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Pagos Programados</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Pagos de seguros</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Gastos de Manutención</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td><span class="et">Otros Gastos</span></td><td><input class="v num money" data-suma="gas"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" style="text-align:left">Gastos Anuales Totales</td><td><input class="v num money calc" data-total="gas" readonly tabindex="-1"></td><td class="sinborde"></td></tr>
+      <tr><td class="sub" colspan="3" style="text-align:left">INGRESO NETO ANUAL</td></tr>
+      <tr><td><span class="et">Ingresos Totales menos Gastos Anuales Totales</span></td><td colspan="2"><input class="v num money calc" data-resta="ing-gas" readonly tabindex="-1"></td></tr>
+    </table>
+
+  </div>
+
+  <table class="g" style="margin-top:10px">
+    <colgroup><col style="width:16%"><col style="width:30%"><col style="width:9%"><col style="width:9%"><col style="width:18%"><col style="width:18%"></colgroup>
+    <tr><td class="barra" colspan="6">DETALLE DE BIENES INMUEBLES</td></tr>
+    <tr>
+      <td class="enc"><span class="et c">Nombre</span></td>
+      <td class="enc"><span class="et c">Descripción (casa hab., Nave industrial etc.) calle , colonia, ciudad</span></td>
+      <td class="enc"><span class="et c">M² de construcción</span></td>
+      <td class="enc"><span class="et c">M² de terreno</span></td>
+      <td class="enc"><span class="et c">Datos de registro</span></td>
+      <td class="enc"><span class="et c">Valor</span></td>
+    </tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v num money" data-suma="inm"></td></tr>
+    <tr><td class="sub" colspan="5" style="text-align:right">Total</td><td><input class="v num money calc" data-total="inm" readonly tabindex="-1"></td></tr>
+  </table>
+
+  <div class="legal-1" style="margin-top:12px">
+    <p>En mi carácter de acreditado y/o aval y/o obligado solidario del crédito ante FACTOR GFC GLOBAL S.A. de C.V. SOFOM ENR certifico que los datos contenidos en este documento, son veraces y reflejan fehacientemente mi situación financiera patrimonial. Este balance Patrimonial lo reconozco como parte integrante de la solicitud de crédito de la persona referida. Esta certificación se extiende para los efectos a que haya lugar conforme a la ley. <b>Art. 112 Ley de Instituciones de Crédito:</b> Serán sancionados con prisión de tres meses hasta quince años y multa de treinta hasta trescientos cincuenta mil días de salario, dependiendo del monto de la operación, quebranto o perjuicio patrimonial, a las personas que con el propósito de obtener un crédito, proporcionen a una institución de crédito, datos falsos sobre el monto de los activos o pasivos de una entidad o persona física o moral, si como consecuencia de ello resulta quebranto o perjuicio patrimonial para la institución.</p>
+  </div>
+
+  <div style="display:flex;gap:2cm;margin-top:44px">
+    <div style="flex:1;text-align:center">
+      <input class="nombre-firma" data-eco="nombre" placeholder="Nombre completo o razón social" style="font-size:8pt">
+      <div style="border-top:1px solid #000"></div>
+      <div style="font-size:7.6pt;font-weight:bold;margin-top:2px">Nombre y firma</div>
+    </div>
+    <div style="flex:1;text-align:center">
+      <input class="nombre-firma" placeholder="Nombre completo del cónyuge" style="font-size:8pt">
+      <div style="border-top:1px solid #000"></div>
+      <div style="font-size:7.6pt;font-weight:bold;margin-top:2px">Nombre y firma del Conyuge en caso de régimen mancomunado</div>
+    </div>
+  </div>
+
+  <div class="pie" style="margin-top:22px;font-weight:normal">Factor GFC Global, S.A. de C.V. SOFOM ENR, Ave. De la Cantera #9301, Col. Las Misiones, Chihuahua, Chih. C.P. 31115, Tel. (614)311-06-14</div>
+</div>
+</section>
+<!-- ============ AVISO DE PRIVACIDAD ============ -->
+<section class="doc" data-doc="aviso" data-nombre="Aviso de Privacidad">
+<div class="hoja" id="doc-aviso">
+  <div class="memb">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div></div>
+    <div class="caja-fecha">
+      <div class="et c">Lugar y fecha de elaboración</div>
+      <div class="cuerpo"><input class="v" data-c="lugarFecha"></div>
+    </div>
+  </div>
+
+  <h2 style="text-align:center;font-weight:normal;font-size:15pt;margin:6px 0 14px">AVISO DE PRIVACIDAD</h2>
+
+  <div class="legal">
+    <p>Con el objeto de dar cumplimiento a lo establecido en la Ley Federal de Protección de Datos Personales en Posesión de los Particulares, FACTOR GFC GLOBAL, SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, SOCIEDAD FINANCIERA DE OBJETO MÚLTIPLE, ENTIDAD NO REGULADA, en lo sucesivo La Responsable en el tratamiento de sus datos personales que proporciona a esta Sociedad, hago constar la responsabilidad frente al tratamiento de datos personales observando los principios de licitud, consentimiento, información y lealtad, en los términos y condiciones a continuación descritas:</p>
+    <h3>1. Definiciones.</h3>
+    <p>De acuerdo con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares y con el presente aviso, se entenderá por:</p>
+    <p><b>I. Datos Personales:</b> Cualquier información concerniente a una persona física identificada o identificable.</p>
+    <p><b>II. Datos Personales sensibles:</b> Aquellos datos personales que afecten a la esfera más íntima de su titular, o cuya utilización indebida pueda dar origen a discriminación o conlleve un riesgo grave para éste. En particular, se consideran sensibles aquellos que puedan revelar aspectos como origen racial, étnico, estado de salud presente y futura, información genética, creencias religiosas, filosóficas y morales, afiliación sindical, opiniones políticas, preferencia sexual.</p>
+    <p><b>III. Derechos ARCO:</b> Derechos de acceso, rectificación, cancelación y oposición previstos en la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</p>
+    <p><b>IV. Ley:</b> Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</p>
+    <p><b>V. Responsable:</b> FACTOR GFC GLOBAL, SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, SOCIEDAD FINANCIERA DE OBJETO MÚLTIPLE, ENTIDAD NO REGULADA, que llevara a cabo el tratamiento de sus datos personales.</p>
+    <p><b>VI. Titular:</b> La persona física a quien corresponden los datos personales.</p>
+    <h3>2. Datos del Responsable.</h3>
+    <p>El Responsable, es la sociedad legalmente constituida bajo las Leyes Mexicanas, quien señala como domicilio convencional para los efectos relacionados con el presente aviso el ubicado en Avenida De la Cantera número 9301 nueve tres cero uno, Colonia Las Misiones, Código Postal 31115 tres uno uno uno cinco, de Chihuahua, Municipio y Estado del mismo nombre, la cual se encuentra comprometida con la protección de todos aquellos Datos Personales proporcionados por el Titular.</p>
+    <h3>3. Información Proporcionada por el Titular.</h3>
+    <p>El Titular proporcionará al Responsable Datos Personales como: nombre completo, fecha de nacimiento, registro federal de contribuyentes, nacionalidad, sexo, estado civil, correo electrónico, domicilio, número de teléfono, escolaridad, empleo, salario, entre otros.</p>
+    <p>Asimismo, el Titular podrá proporcionar al Responsable Datos Sensibles, patrimoniales o financieros, los cuales serán tratados bajo medidas de seguridad previstas por la Ley u otras Leyes especiales, garantizando su confidencialidad en todo momento.</p>
+    <h3>4. Finalidad del Tratamiento de Datos.</h3>
+    <p>Los Datos Personales que el Titular proporcione al Responsable serán todos aquellos necesarios para que la Responsable le pueda ofrecer el producto, operación o servicio de que se trate. El tratamiento de datos que realizará la Responsable incluye la evaluación, análisis, uso, manejo, aprovechamiento, transferencia, disposición, almacenamiento, acceso, y cualquier otro análogo, que sea necesario para que la Responsable pueda ofrecerle al Titular un producto, operación y/o Servicio en cumplimiento de su objeto social.</p>
+    <p>Asimismo, los Datos Personales proporcionados por el Titular, con excepción de Datos Personales sensibles podrán ser utilizados para fines comerciales y promocionales, para el envío de información comercial y publicitaria, incluidos los envíos por correo electrónico, telefonía celular (mensaje SMS, MMS, entre otros) o todo medio de comunicación electrónica similar o que pueda llegar a desarrollarse, así como para encuestas de calidad y satisfacción, análisis de uso de productos, estadísticas para el envío de avisos acerca de productos y servicios operados por el Responsable y cuando otras Leyes lo requieran.</p>
+    <p>El tratamiento de los Datos Personales proporcionados por el Titular al Responsable se limitará al cumplimiento de las finalidades previstas en el presente aviso de privacidad y a fines distintos que resulten compatibles o análogos a los establecidos en dicho aviso, sin que para ello se requiera obtener nuevamente el consentimiento del Titular.</p>
+    <p>Al ponerse a disposición del Titular el presente aviso de privacidad y no manifestar éste oposición alguna, se entenderá que el Titular otorga al Responsable su consentimiento para llevar a cabo el tratamiento de los Datos Personales que hubieran sido proporcionados y/o los que con motivo de alguna de las finalidades establecidas en el presente aviso proporcione en lo futuro, ya sea personalmente o a través de agentes, promotores, comisionistas o socios comerciales, así como de cualquier medio electrónico, óptico, sonoro, audiovisual o a través de cualquier otra tecnología o medio con el que llegue a contar el Responsable.</p>
+    <p>No será necesario el consentimiento expreso para el tratamiento de Datos Personales cuando su manejo tenga el propósito de cumplir obligaciones derivadas de una relación jurídica entre el Titular y el Responsable, ni en los casos que contempla el artículo 10 de la Ley. Lo anterior sin perjuicio de la facultad que posee el Titular para el ejercicio de los Derechos ARCO en términos de la Ley.</p>
+    <p>El Responsable informa que toda comunicación por correo electrónico no protegida realizada a través de Internet puede ser objeto de intercepción, pérdida o posibles alteraciones en cuyo caso, el Titular no podrá exigir al Responsable alguna indemnización por cualquier daño resultante por la intercepción, sustracción, pérdida o alteración relacionada con un mensaje de correo electrónico entre las partes.</p>
+    <p>El Titular manifiesta que los Datos Personales proporcionados al Responsable son veraces y se hace responsable de comunicar a éste cualquier modificación a los mismos a través de los formatos designados para ello que se encuentran en cada una de las sucursales del Responsable.</p>
+    <p>El Titular faculta al Responsable para allegarse de Datos Personales a través de terceros que el propio Titular haya autorizado frente al Responsable en calidad de referencias. Será responsabilidad del Titular informar a esos terceros respecto de la información que proporcionó al Responsable y los fines de la misma, no siendo obligación del Responsable informar a esos terceros respecto del contenido de este aviso de privacidad.</p>
+    <h3>5. Limitación del Uso y Divulgación de los datos.</h3>
+    <p>El Responsable ha adoptado los niveles de seguridad y de protección de Datos Personales requeridos por Ley, adicionalmente, podrá implementar otros medios y medidas técnicas que se encuentren a su alcance para evitar la pérdida, mal uso, alteración, acceso no autorizado y robo de los Datos Personales proporcionados por el Titular.</p>
+    <h3>6. Medios para ejercer los Derechos ARCO.</h3>
+    <p>El Titular, por sí o mediante representante legal debidamente acreditado, tiene reconocidos y podrá ejercitar los derechos de acceso, rectificación, cancelación y oposición (a partir de enero de 2012, de conformidad con lo establecido por la Ley), frente al Responsable a través de una solicitud enviada a la dirección de correo electrónico factorgfc@hotmail.com, la cual deberá contener y acompañarse por los requisitos exigidos por el artículo 29 de la Ley, cuya tramitación se realizará conforme al procedimiento y términos dispuestos por el ordenamiento legal correspondiente.</p>
+    <p>En los casos en que el Titular desee revocar la autorización otorgada al Responsable respecto de los Datos Personales proporcionados, deberá realizar la solicitud correspondiente en los mismos términos establecido en el presente aviso de privacidad para ejercer los derechos ARCO.</p>
+    <p>La entrega de los Datos Personales será gratuita, debiendo cubrir el Titular únicamente los gastos justificados de envío o con el costo de reproducción en copias u otros formatos. No obstante, si el Titular reitera su solicitud en un periodo menor a doce meses, los costos no serán mayores a tres días de Salario Mínimo General Vigente en el Distrito Federal a menos que existan modificaciones sustanciales al aviso de privacidad que motiven nuevas consultas.</p>
+    <h3>7. Transferencia de Datos.</h3>
+    <p>El Responsable se compromete a cuidar el cumplimiento de todos los principios legales de protección en torno a la transferencia de sus datos personales. De igual forma, manifiesta su compromiso para que se respete en todo momento, el presente aviso de privacidad, por las personas físicas o morales a las que se pudiera transferir la información proporcionada.</p>
+    <p>El Responsable podrá transferir los datos personales únicamente entre las empresas descritas en el numeral 1, fracción V.</p>
+    <p>Las transferencias nacionales o internacionales de datos podrán llevarse a cabo sin el consentimiento del Titular, entre otros casos establecidos por la Ley, siempre que la transferencia sea efectuada a subsidiarias o afiliadas bajo el control común del Responsable y sea necesaria en virtud de un contrato celebrado o por celebrar en interés del Titular, por el responsable y un tercero; y cuando la transferencia sea precisa para el mantenimiento o cumplimiento de una relación jurídica entre el Responsable y el Titular.</p>
+    <h3>8. Cambios al Aviso de privacidad.</h3>
+    <p>El Responsable se reserva su derecho a realizar cambios en el presente aviso de privacidad.</p>
+    <p>Asimismo, se informa al Titular que cuenta con el derecho a oponerse al tratamiento de sus datos personales en caso de no estar de acuerdo con las modificaciones que pudiera presentar este aviso de privacidad, para ello, deberá enviar una solicitud a la dirección de correo electrónico a que se refiere el numeral 6 del presente aviso de privacidad. Lo anterior, en el entendido que no se darán efectos retroactivos a la revocación solicitada por el Titular.</p>
+  </div>
+
+  <div style="margin-top:20px;font-size:9pt">
+    Autorización para hacer uso de los datos personales para mercadeo:
+    <span class="sn" style="font-size:9pt;margin-left:8px">SI <input type="radio" name="mercadeo" id="mercS"><label class="bx grande" for="mercS"></label></span>
+    <span class="sn" style="font-size:9pt">NO <input type="radio" name="mercadeo" id="mercN"><label class="bx grande" for="mercN"></label></span>
+  </div>
+
+  <div class="firma" style="margin-top:44px">
+    <input class="nombre-firma" data-eco="nombre" placeholder="Nombre completo o razón social" style="font-size:9.4pt;width:10cm">
+    <div class="raya" style="width:10cm"></div>
+    <div class="cap" style="font-size:9pt">NOMBRE Y FIRMA DE ENTERADO Y ABSOLUTA CONFORMIDAD</div>
+    <div class="nota">Firma autógrafa al imprimir.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============ AUTORIZACIÓN BC · PERSONAS FÍSICAS ============ -->
+<section class="doc" data-doc="autorizacion-pf" data-nombre="Autorización BC — Persona Física">
+<div class="hoja amplia" id="doc-autorizacion-pf">
+  <div class="memb simple" style="margin-bottom:20px">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div style="text-align:center;font-weight:bold;font-size:9.6pt;line-height:1.35;padding-top:.5cm">
+      Formato de autorización definido para las SOFOM E.N.R.<br>
+      Autorización para solicitar Reportes de Crédito<br>
+      Personas Físicas
+    </div>
+  </div>
+
+  <p class="parrafo">Por este conducto autorizo expresamente a <b>FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R.,</b> para que por conducto de sus funcionarios facultados lleve a cabo Investigaciones, sobre mi comportamiento crediticio en Trans Unión de México, S. A. SIC</p>
+
+  <p class="parrafo">Asimismo, declaro que conozco la naturaleza y alcance de las sociedades de información crediticia y de la información contenida en los reportes de crédito y reporte de crédito especial, declaro que conozco la naturaleza y alcance de la información que se solicitará, del uso que <b>FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R,</b> hará de tal información y de que ésta podrá realizar consultas periódicas sobre mi historial, consintiendo que esta autorización se encuentre vigente por un período de 3 años contados a partir de su expedición y en todo caso durante el tiempo que se mantenga la relación jurídica.</p>
+
+  <div style="margin-top:26px">
+    <div class="fila"><div class="campo" style="flex:1 1 100%;flex-wrap:wrap">
+      <label style="flex:1 1 100%">Nombre del solicitante:</label>
+      <input class="linea" data-c="nombre">
+    </div></div>
+    <div class="fila"><div class="campo" style="flex:0 1 9cm"><label>RFC o CURP:</label><input class="linea mayus" data-c="rfcCurp" maxlength="18"></div></div>
+    <div class="fila">
+      <div class="campo" style="flex:1 1 42%"><label>Domicilio:</label><input class="linea" data-c="p_calle"></div>
+      <div class="campo" style="flex:1 1 42%"><label>Colonia:</label><input class="linea" data-c="p_colonia"></div>
+    </div>
+    <div class="fila">
+      <div class="campo" style="flex:1 1 26%"><label>Municipio:</label><input class="linea" data-c="p_municipio"></div>
+      <div class="campo" style="flex:1 1 26%"><label>Estado:</label><input class="linea estados" data-c="p_estado"></div>
+      <div class="campo" style="flex:1 1 26%"><label>Código postal:</label><input class="linea cp" data-c="p_cp" maxlength="5" inputmode="numeric"></div>
+    </div>
+    <div class="fila"><div class="campo" style="flex:0 1 9cm"><label>Teléfono (s):</label><input class="linea" data-c="telFijo"></div></div>
+    <div class="fila"><div class="campo" style="flex:0 1 12cm"><label>Lugar y Fecha en que se firma la autorización:</label><input class="linea" data-c="lugarFecha"></div></div>
+    <div class="fila"><div class="campo" style="flex:1 1 100%"><label>Nombre del funcionario que recaba la autorización:</label><input class="linea" data-c="funcionario"></div></div>
+  </div>
+
+  <p class="parrafo" style="font-weight:bold;margin-top:24px">Estoy consciente y acepto que este documento quede bajo custodia de FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R y/o Sociedad de Información Crediticia consultada para efectos de control y cumplimiento del artículo 28 de la Ley para Regular las Sociedades de Información Crediticia; mismo que señala que las Sociedades sólo podrán proporcionar información a un Usuario, cuando éste cuente con la autorización expresa del Cliente mediante su firma autógrafa.</p>
+
+  <div class="firma" style="margin-top:52px">
+    <input class="nombre-firma" data-eco="nombre" placeholder="Nombre completo o razón social" style="font-size:9.4pt;width:6.4cm">
+    <div class="raya" style="width:6.4cm"></div>
+    <span style="font-size:9.4pt">Firma del solicitante</span>
+    <div class="nota">Firma autógrafa al imprimir.</div>
+  </div>
+
+  <section class="caja-uso">
+    <h2>Para uso exclusivo de la Empresa que efectúa la consulta FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R</h2>
+    <div class="cuerpo">
+      <div class="fila"><div class="campo" style="flex:0 1 7.4cm"><label>Fecha de Consulta BC :</label><input class="linea"></div></div>
+      <div class="fila"><div class="campo" style="flex:0 1 7.4cm"><label>Folio de Consulta BC :</label><input class="linea"></div></div>
+    </div>
+  </section>
+
+  <p class="importante" style="margin-top:14px"><span>IMPORTANTE:</span> Este formato debe ser llenado individualmente, para una sola persona física.</p>
+  <div class="version">Ver 180511</div>
+</div>
+</section>
+
+<!-- ============ AUTORIZACIÓN BC · PERSONAS MORALES / PFAE ============ -->
+<section class="doc" data-doc="autorizacion-pm" data-nombre="Autorización BC — Persona Moral / PFAE">
+<div class="hoja amplia" id="doc-autorizacion-pm">
+  <div class="memb simple" style="margin-bottom:20px">
+    <div class="logo"><img class="logoImg" alt="" hidden><div class="logo-vacio">Cargar logo</div></div>
+    <div style="text-align:center;font-weight:bold;font-size:9.6pt;line-height:1.35;padding-top:.5cm">
+      Formato de autorización definido para las SOFOM E.N.R.<br>
+      Autorización para solicitar Reportes de Crédito<br>
+      Personas Morales
+    </div>
+  </div>
+
+  <p class="parrafo">Por este conducto autorizo expresamente a <b>FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R.,</b> para que por conducto de sus funcionarios facultados lleve a cabo Investigaciones, sobre mi comportamiento crediticio o el de la Empresa que represento en Dun &amp; Bradstreet, S.A. SIC</p>
+
+  <p class="parrafo">Asimismo, declaro que conozco la naturaleza y alcance de las sociedades de información crediticia y de la información contenida en los reportes de crédito y reporte de crédito especial, declaro que conozco la naturaleza y alcance de la información que se solicitará, del uso que <b>FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R,</b> hará de tal información y de que ésta podrá realizar consultas periódicas sobre mi historial o el de la empresa que represento, consintiendo que esta autorización se encuentre vigente por un período de 3 años contados a partir de su expedición y en todo caso durante el tiempo que se mantenga la relación jurídica.</p>
+
+  <p class="parrafo">En caso de que la solicitante sea una Persona Moral, declaro bajo protesta de decir verdad Ser Representante Legal de la empresa mencionada en esta autorización; manifestando que a la fecha de firma de la presente autorización los poderes no me han sido revocados, limitados, ni modificados en forma alguna.</p>
+
+  <div style="margin-top:18px">
+    <div>Autorización para:</div>
+    <div style="font-weight:bold;display:flex;gap:26px;align-items:center;margin-top:4px;flex-wrap:wrap">
+      <span class="sn" style="font-size:9.4pt">Persona Física con Actividad Empresarial (PFAE) <input type="radio" name="autTipo" id="autPFAE"><label class="bx grande" for="autPFAE"></label></span>
+      <span class="sn" style="font-size:9.4pt">Persona Moral (PM) <input type="radio" name="autTipo" id="autPM"><label class="bx grande" for="autPM"></label></span>
+    </div>
+  </div>
+
+  <div style="margin-top:20px">
+    <div class="fila"><div class="campo" style="flex:1 1 100%;flex-wrap:wrap">
+      <label style="flex:1 1 100%">Nombre del solicitante (Persona Física o Razón Social de la Persona Moral):</label>
+      <input class="linea" data-c="nombre">
+    </div></div>
+    <div class="fila"><div class="campo" style="flex:1 1 100%;flex-wrap:wrap">
+      <label style="flex:1 1 100%">Para el caso de Persona Moral, nombre del Representante Legal:</label>
+      <input class="linea" data-c="repLegal">
+    </div></div>
+    <div class="fila"><div class="campo" style="flex:0 1 9cm"><label>RFC o CURP:</label><input class="linea mayus" data-c="rfcCurp" maxlength="18"></div></div>
+    <div class="fila">
+      <div class="campo" style="flex:1 1 42%"><label>Domicilio:</label><input class="linea" data-c="f_calle"></div>
+      <div class="campo" style="flex:1 1 42%"><label>Colonia:</label><input class="linea" data-c="f_colonia"></div>
+    </div>
+    <div class="fila">
+      <div class="campo" style="flex:1 1 26%"><label>Municipio:</label><input class="linea" data-c="f_municipio"></div>
+      <div class="campo" style="flex:1 1 26%"><label>Estado:</label><input class="linea estados" data-c="f_estado"></div>
+      <div class="campo" style="flex:1 1 26%"><label>Código postal:</label><input class="linea cp" data-c="f_cp" maxlength="5" inputmode="numeric"></div>
+    </div>
+    <div class="fila"><div class="campo" style="flex:0 1 9cm"><label>Teléfono (s):</label><input class="linea" data-c="telFijo"></div></div>
+    <div class="fila"><div class="campo" style="flex:0 1 12cm"><label>Lugar y Fecha en que se firma la autorización:</label><input class="linea" data-c="lugarFecha"></div></div>
+    <div class="fila"><div class="campo" style="flex:1 1 100%"><label>Nombre del funcionario que recaba la autorización:</label><input class="linea" data-c="funcionario"></div></div>
+  </div>
+
+  <p class="parrafo" style="font-weight:bold;margin-top:20px">Estoy consciente y acepto que este documento quede bajo custodia de FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R y/o Sociedad de Información Crediticia consultada para efectos de control y cumplimiento del artículo 28 de la Ley para Regular las Sociedades de Información Crediticia; mismo que señala que las Sociedades sólo podrán proporcionar información a un Usuario, cuando éste cuente con la autorización expresa del Cliente mediante su firma autógrafa.</p>
+
+  <div class="firma" style="margin-top:46px">
+    <input class="nombre-firma" data-eco="repLegal|nombre" placeholder="Nombre completo o razón social" style="font-size:9.4pt;width:6.4cm">
+    <div class="raya" style="width:6.4cm"></div>
+    <span style="font-size:9.4pt">Firma de PFAE o Representante Legal de la empresa</span>
+    <div class="nota">Firma autógrafa al imprimir.</div>
+  </div>
+
+  <section class="caja-uso">
+    <h2>Para uso exclusivo de la Empresa que efectúa la consulta FACTOR GFC GLOBAL SA DE CV SOFOM, E.N.R</h2>
+    <div class="cuerpo">
+      <div class="fila"><div class="campo" style="flex:0 1 7.4cm"><label>Fecha de Consulta BC :</label><input class="linea"></div></div>
+      <div class="fila"><div class="campo" style="flex:0 1 7.4cm"><label>Folio de Consulta BC :</label><input class="linea"></div></div>
+    </div>
+  </section>
+
+  <p class="importante" style="margin-top:14px"><span>IMPORTANTE:</span> Este formato debe ser llenado individualmente, para una sola persona física con actividad empresarial ó para una sola empresa. En caso de requerir el Historial crediticio del representante legal, favor de llenar un formato adicional.</p>
+</div>
+</section>
+</main>
+
+<main id="estudio" hidden>
+<div class="hoja estudio">
+
+  <table class="g" style="margin-bottom:16px">
+    <colgroup><col style="width:68%"><col style="width:32%"></colgroup>
+    <tr>
+      <td style="padding:6px 8px">
+        <div style="font-weight:bold;font-size:12pt">ESTUDIO DE CRÉDITO</div>
+        <div style="display:flex;gap:6px;align-items:flex-end;margin-top:3px">
+          <span class="et" style="display:inline">Empresa:</span><input class="v ee" data-e="empresa" style="font-size:10pt;font-weight:bold">
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;margin-top:3px">
+          <span class="et" style="display:inline">Grupo:</span><input class="v ee" data-e="grupo">
+        </div>
+      </td>
+      <td style="padding:6px 8px">
+        <span class="et c">Fecha de elaboración</span>
+        <input class="v ee" data-e="fechaElab">
+        <span class="et c" style="margin-top:6px">Analista responsable</span>
+        <input class="v ee" data-e="analista">
+      </td>
+    </tr>
+  </table>
+
+  <!-- 1 -->
+  <section class="sec">
+    <h2>1.- Antecedentes</h2>
+    <div class="guia">
+      Antecedentes del cliente, a qué grupo pertenece, cambios importantes (adquisiciones, fusiones, asociaciones, cambio de estructura accionaria) · Estructura accionaria y puesto en el consejo de administración · Giro o actividad específica de la acreditada, sin copiar el objeto social · Tipo de administración (familiar, semiprofesional, profesional) · Número de trabajadores, empleados, sindicato, experiencia en el ramo · Si el objeto social es actividad vulnerable y su calificación de riesgo según formato ARC · Si es PEP, explicar por qué y hasta cuándo · Resultado de la consulta en listas negras (SAT, PEPS, OFAC).
+    </div>
+    <div class="ta rt" contenteditable="true" data-e="s1" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+
+    <h3>Principales administradores</h3>
+    <table class="g tabla-est" data-tabla="admin">
+      <colgroup><col style="width:26%"><col style="width:18%"><col style="width:20%"><col style="width:16%"><col style="width:20%"></colgroup>
+      <tr><td class="sub">Nombre</td><td class="sub">Puesto</td><td class="sub">Formación académica</td><td class="sub">Antigüedad en la Empresa</td><td class="sub">Experiencia en el Ramo</td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="admin">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="admin">− quitar fila</button>
+
+    <h3>Personas que ejercen el control (persona moral)</h3>
+    <table class="g tabla-est" data-tabla="control">
+      <colgroup><col style="width:30%"><col style="width:18%"><col style="width:18%"><col style="width:16%"><col style="width:18%"></colgroup>
+      <tr><td class="sub">Nombre completo</td><td class="sub">RFC</td><td class="sub">CURP</td><td class="sub">% participación</td><td class="sub">Cargo / relación</td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="control">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="control">− quitar fila</button>
+
+    <h3>¿Quién es el aval / propietario real / proveedor de recursos?</h3>
+    <div class="guia">Describir quién es, dónde se ubica y qué relación tiene con el acreditado · Breve antecedente, fecha de constitución, objeto social · Cuadro de personas que ejercen el control en caso de persona moral.</div>
+    <div class="ta rt" contenteditable="true" data-e="s1b" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="sec">
+    <h2>2.- Ubicación</h2>
+    <div class="guia">Ubicación geográfica, domicilio fiscal y/o comercial, con fotografía de fachada e interior · Ubicación de sucursales y puntos de venta · Si las instalaciones son propias o rentadas · Condiciones de la maquinaria y equipo (antigüedad, tecnología, mantenimiento) · Descripción del interior y del exterior del domicilio.</div>
+    <div class="ta rt" contenteditable="true" data-e="s2" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+
+    <h3>Ubicaciones</h3>
+    <table class="g tabla-est" data-tabla="ubic">
+      <colgroup><col style="width:16%"><col style="width:40%"><col style="width:18%"><col style="width:14%"><col style="width:12%"></colgroup>
+      <tr><td class="sub">Tipo</td><td class="sub">Dirección completa</td><td class="sub">Coordenadas (lat, long)</td><td class="sub">Propia / Rentada</td><td class="sub solo-pantalla">Mapa</td></tr>
+      <tr class="fila-datos"><td><input class="v ee" value="Matriz"></td><td><input class="v ee dir"></td><td><input class="v ee coord"></td><td><input class="v ee"></td><td class="solo-pantalla"><button type="button" class="ver-mapa">Ver</button></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee dir"></td><td><input class="v ee coord"></td><td><input class="v ee"></td><td class="solo-pantalla"><button type="button" class="ver-mapa">Ver</button></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee dir"></td><td><input class="v ee coord"></td><td><input class="v ee"></td><td class="solo-pantalla"><button type="button" class="ver-mapa">Ver</button></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="ubic">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="ubic">− quitar fila</button>
+
+    <div class="mapa-panel solo-pantalla">
+      <div class="mapa-controles">
+        <input id="mapaBusca" placeholder="Dirección o coordenadas: Ave. De la Cantera 9301, Chihuahua">
+        <button type="button" id="btnMapa">Ver mapa</button>
+        <button type="button" id="btnMapaSat">Satélite</button>
+        <button type="button" id="btnMapaNueva">Abrir en Google Maps</button>
+      </div>
+      <div id="mapaMarco"></div>
+      <div class="mapa-nota">La vista interactiva necesita internet y no se imprime. Para que el mapa quede en el documento, toma la captura y pégala abajo con Ctrl+V.</div>
+    </div>
+
+    <h3>Plano de ubicación / mapa</h3>
+    <div class="ta rt" contenteditable="true" data-e="s2mapa" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+
+    <h3>Fotografías de fachada e interior</h3>
+    <div class="ta rt" contenteditable="true" data-e="s2fotos" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="sec">
+    <h2>3.- Producto / servicio</h2>
+    <div class="guia">Explicar y describir los principales productos · Proceso productivo, grado de integración y automatización · Capacidad instalada; si hay capacidad ociosa, justificar los motivos · Ventajas competitivas del negocio.</div>
+    <div class="ta rt" contenteditable="true" data-e="s3" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="sec">
+    <h2>4.- Principales proveedores</h2>
+    <div class="guia">Accesibilidad de la materia prima y principales proveedores, plazo y políticas de pago · Opinión que tienen los proveedores de su cliente (consulta de referencias comerciales).</div>
+    <div class="ta rt" contenteditable="true" data-e="s4" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+    <table class="g tabla-est" data-tabla="prov">
+      <colgroup><col style="width:46%"><col style="width:34%"><col style="width:20%"></colgroup>
+      <tr><td class="sub">Proveedor</td><td class="sub">Giro</td><td class="sub">Porcentaje</td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estProv1Nombre"></td><td><input class="v ee" data-c="estProv1Giro"></td><td><input class="v ee num" data-suma="prov" data-c="estProv1Pct"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estProv2Nombre"></td><td><input class="v ee" data-c="estProv2Giro"></td><td><input class="v ee num" data-suma="prov" data-c="estProv2Pct"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estProv3Nombre"></td><td><input class="v ee" data-c="estProv3Giro"></td><td><input class="v ee num" data-suma="prov" data-c="estProv3Pct"></td></tr>
+      <tr><td class="sub" colspan="2" style="text-align:right">Suma</td><td><input class="v num calc" data-total="prov" readonly tabindex="-1"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="prov">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="prov">− quitar fila</button>
+  </section>
+
+  <!-- 5 -->
+  <section class="sec">
+    <h2>5.- Principales clientes</h2>
+    <div class="guia">Mercado al que está dirigido, participación actual y tendencia · De qué depende su demanda o la evolución del mercado; canales de distribución · Si las operaciones son en moneda nacional o extranjera y si existen coberturas de tipo de cambio · Qué hace atractiva a la empresa en su mercado (factores de éxito o riesgo) · Principales clientes, plazo y políticas de cobro y/o crédito.</div>
+    <div class="ta rt" contenteditable="true" data-e="s5" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+    <table class="g tabla-est" data-tabla="cli">
+      <colgroup><col style="width:46%"><col style="width:34%"><col style="width:20%"></colgroup>
+      <tr><td class="sub">Cliente</td><td class="sub">Giro</td><td class="sub">Porcentaje</td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estCli1Nombre"></td><td><input class="v ee" data-c="estCli1Giro"></td><td><input class="v ee num" data-suma="cli" data-c="estCli1Pct"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estCli2Nombre"></td><td><input class="v ee" data-c="estCli2Giro"></td><td><input class="v ee num" data-suma="cli" data-c="estCli2Pct"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee" data-c="estCli3Nombre"></td><td><input class="v ee" data-c="estCli3Giro"></td><td><input class="v ee num" data-suma="cli" data-c="estCli3Pct"></td></tr>
+      <tr><td class="sub" colspan="2" style="text-align:right">Suma</td><td><input class="v num calc" data-total="cli" readonly tabindex="-1"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="cli">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="cli">− quitar fila</button>
+  </section>
+
+  <!-- 6 -->
+  <section class="sec">
+    <h2>6.- Principales competidores</h2>
+    <div class="guia">Definir e identificar a los principales competidores en el mercado.</div>
+    <div class="ta rt" contenteditable="true" data-e="s6" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="sec">
+    <h2>7.- Mercado / sector</h2>
+    <div class="guia">Factores clave que la empresa debe tener para ser exitosa dentro del sector (precio, costos, calidad, marca, superioridad tecnológica, servicio, canales de distribución) y si los cumple · Conclusiones sobre la situación del sector · Cuestiones económicas que pudieran afectar a las empresas, actuales y futuras · Regulaciones existentes y su impacto, y si existe algún riesgo futuro · Principales cifras de la industria (volúmenes de producción, ritmo de crecimiento, principales jugadores).</div>
+    <div class="ta rt" contenteditable="true" data-e="s7" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="sec">
+    <h2>8.- Noticias relevantes <span class="opc">(en caso de aplicar)</span></h2>
+    <div class="guia">Buscar noticias del sector, la empresa y/o el representante legal que impliquen un riesgo.</div>
+    <div class="ta rt" contenteditable="true" data-e="s8" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 9 -->
+  <section class="sec">
+    <h2>9.- Solicitud de crédito</h2>
+    <table class="g">
+      <colgroup><col style="width:40%"><col style="width:30%"><col style="width:30%"></colgroup>
+      <tr><td class="sub">Concepto</td><td class="sub">Solicitud 1</td><td class="sub">Solicitud 2</td></tr>
+      <tr><td>Tipo de crédito solicitado (*)</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Tipo de solicitud (**)</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Monto Otorgado</td><td><input class="v ee num money"></td><td><input class="v ee num money"></td></tr>
+      <tr><td>Monto a Ratificar (Saldo a XXX)</td><td><input class="v ee num money"></td><td><input class="v ee num money"></td></tr>
+      <tr><td>Moneda</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Destino</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Plazo</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Gracia</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Tasa anual</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Comisión por apertura</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Fuente principal de pago</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Garantía (***)</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Garante hipotecario</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Valor avalúo</td><td><input class="v ee num money"></td><td><input class="v ee num money"></td></tr>
+      <tr><td>Fecha avalúo</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Aforo mínimo</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Aforo mínimo global</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Avales</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Financiamientos adicionales (S/N)</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Adelanto en PQ — importe — plazo</td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Propietario Real <span class="opc">(en caso de aplicar)</span></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr><td>Proveedor de recursos <span class="opc">(en caso de aplicar)</span></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+    </table>
+    <div class="notas">
+      <p><b>(*) Tipos de crédito:</b> Apertura en crédito simple (ACS), Apertura de crédito en cuenta corriente (ACCC), Arrendamiento financiero (AF), Arrendamiento Puro (AP), Refaccionario (Refacc), Préstamo de Habilitación y Avío (PHA), Fideicomiso, Factoraje. Con Garantía hipotecaria (GH), Garantía prendaria (GP), Garantía fiduciaria (GF).</p>
+      <p><b>(**) Tipos de solicitud:</b> Nueva, Modificación, Eliminación, Informativa, Ratificación, Renovación.</p>
+      <p><b>(***)</b> Descripción breve de la garantía hipotecaria, prendaria o fiduciaria.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="sec">
+    <h2>10.- Descripción de la garantía</h2>
+    <div class="guia">Garantías reales (hipotecarias, prendarias, fideicomisos, cauciones), especificar si está asegurada y bajo qué términos · Plano de ubicación con foto · Propietario · Superficie de terreno y de construcción · Status (gravada o libre) · Datos de registro · Valor conforme a avalúo, perito y fecha · Calidad de las garantías: ubicación geográfica, valor estimado, descripción del inmueble, grado de comercialización, si es o no realizable.</div>
+    <div class="ta rt" contenteditable="true" data-e="s10" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 11 -->
+  <section class="sec">
+    <h2>11.- Justificación del crédito</h2>
+    <div class="guia">Justificar el tipo de crédito, el monto, plazo y moneda · Describir los conceptos de inversión · Con qué porcentaje participa Factor y si hay otra fuente de financiamiento o recursos propios · Fuente primaria de pago: recuperación de inversiones operativas, generación de recursos, flujos de efectivo, cobranza de cartera, ingresos por rentas a terceros.</div>
+    <div class="ta rt" contenteditable="true" data-e="s11" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 12 -->
+  <section class="sec">
+    <h2>12.- Buró de crédito</h2>
+    <div class="guia">La consulta se realiza a la acreditada, representante legal, avales y cónyuges en caso de sociedad conyugal.</div>
+    <table class="g tabla-est chica" data-tabla="buro">
+      <colgroup><col style="width:16%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:8%"><col style="width:14%"></colgroup>
+      <tr><td class="sub">Nombre</td><td class="sub">Fecha consulta</td><td class="sub">Cuentas abiertas</td><td class="sub">Límite de crédito abierto</td><td class="sub">Saldo actual abierto</td><td class="sub">Saldo vencido abierto</td><td class="sub">Pago mensual promedio</td><td class="sub">Calif cédula</td><td class="sub">Comentarios</td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+      <tr class="fila-datos"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee num money"></td><td><input class="v ee"></td><td><input class="v ee"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="buro">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="buro">− quitar fila</button>
+    <div class="guia">Comportamiento histórico de pago con terceros y con Factor GFC · Justificación del cliente en caso de incumplimiento: empresa, importe, antigüedad · Antigüedad de la relación crediticia con Factor GFC · ¿Concuerdan los pasivos del reporte con los reportados en el balance general? · Profundizar si la calificación es mala o regular y señalar la documentación necesaria para su regularización.</div>
+    <div class="ta rt" contenteditable="true" data-e="s12" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 13 -->
+  <section class="sec">
+    <h2>13.- Verificación de propiedad</h2>
+    <div class="guia">Consulta en el RPP de acreditados, obligados solidarios y avales · Identificar los inmuebles propuestos en garantía · ¿Los pasivos reportados por la verificación son congruentes con los del balance?</div>
+    <div class="ta rt" contenteditable="true" data-e="s13" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 14 -->
+  <section class="sec">
+    <h2>14.- Estados financieros</h2>
+    <div class="guia">Nombre del contador que elaboró los estados financieros · Deberán presentar estados financieros dictaminados las empresas que en el ejercicio inmediato anterior registren activos mayores a $79 MDP, ventas mayores a $100 MDP o más de 300 empleados.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+      <div style="flex:1 1 12cm;display:flex;gap:6px;align-items:flex-end"><span class="et" style="display:inline">Contador que elaboró:</span><input class="v ee" data-e="contador"></div>
+      <div style="flex:0 1 6cm;display:flex;gap:6px;align-items:flex-end"><span class="et" style="display:inline">¿Dictaminados?</span><input class="v ee" data-e="dictaminados"></div>
+    </div>
+
+    <h3>Comportamiento en ventas (ingresos) — costos — márgenes</h3>
+    <div class="guia">Calidad de la información financiera · Variación en ventas o ingresos: cambios en volúmenes y precios, y las causas · Otros aspectos de mercado o producción que afectaron su actividad · Análisis comparativo de los principales rubros del estado de resultados: tendencia en ventas, costo de venta, gastos de operación, gastos financieros, utilidad neta, margen operativo.</div>
+    <div class="ta rt" contenteditable="true" data-e="s14a" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+
+    <h3>Rentabilidad, eficiencia y ciclo financiero</h3>
+    <div class="guia">Balance general: tendencia y variaciones · Ciclo financiero: tendencia y por qué varía de un periodo a otro · Justificar incrementos o bajas en inversiones o financiamientos operativos (días clientes, inventario, proveedores) · Ligarlo con las necesidades de capital de trabajo e identificar si es positivo o negativo · Rentabilidad, eficiencia, ROA, rotación de activos, razón circulante · Calidad de los activos circulantes, composición y estado · Si los inventarios son de fácil realización, perecederos o concentrados · Si las cuentas irrecuperables son proporcionales a la cartera, si hay provisiones y cargos a resultados.</div>
+    <div class="ta rt" contenteditable="true" data-e="s14b" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 15 -->
+  <section class="sec">
+    <h2>15.- Estructura de pasivos <span class="opc">(cifras en miles)</span></h2>
+    <table class="g tabla-est chica" data-tabla="pasivos">
+      <colgroup><col style="width:15%"><col style="width:17%"><col style="width:12%"><col style="width:9%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:10%"></colgroup>
+      <tr><td class="sub">Institución</td><td class="sub">Tipo de crédito y monto</td><td class="sub">Garantías</td><td class="sub">Fecha Vto.</td><td class="sub">Moneda</td><td class="sub">Tasa de interés</td><td class="sub">Corto plazo</td><td class="sub">Largo plazo</td><td class="sub">Total</td></tr>
+      <tr class="fila-datos fila-pasivo"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num money pcp" data-suma="pcp"></td><td><input class="v ee num money plp" data-suma="plp"></td><td><input class="v num money calc ptot" readonly tabindex="-1"></td></tr>
+      <tr class="fila-datos fila-pasivo"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num money pcp" data-suma="pcp"></td><td><input class="v ee num money plp" data-suma="plp"></td><td><input class="v num money calc ptot" readonly tabindex="-1"></td></tr>
+      <tr class="fila-datos fila-pasivo"><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee"></td><td><input class="v ee num money pcp" data-suma="pcp"></td><td><input class="v ee num money plp" data-suma="plp"></td><td><input class="v num money calc ptot" readonly tabindex="-1"></td></tr>
+      <tr><td class="sub" colspan="6" style="text-align:right">Total MN (miles)</td><td><input class="v num money calc" data-total="pcp" readonly tabindex="-1"></td><td><input class="v num money calc" data-total="plp" readonly tabindex="-1"></td><td><input class="v num money calc ptotal-general" readonly tabindex="-1"></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="pasivos">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="pasivos">− quitar fila</button>
+    <div class="guia">Características relevantes de la tabla de pasivos · Apalancamiento (PT/CC) · Congruencia de los destinos de la deuda actual con los plazos contratados · Si es similar a la estructura de pasivos del buró de crédito · Perfil de vencimientos, cobertura de vencimientos de corto plazo, urgencia de reestructurar adeudos, posibilidad de pago anticipado, comparación con la generación de recursos y su capacidad de cubrir vencimientos anuales.</div>
+    <div class="ta rt" contenteditable="true" data-e="s15" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 16 -->
+  <section class="sec">
+    <h2>16.- Proyecciones</h2>
+    <div class="guia">Cobertura de intereses · Horizonte de deuda (deuda financiera / UAFIRDA) · Cobertura de deuda · Conclusiones sobre la capacidad de generar flujo de efectivo y cumplir con el pago de los créditos solicitados, y el análisis de sensibilidad · Sensibilizar sobre los riesgos que implica el crédito o por qué la estructura es adecuada · Análisis y conclusiones de las proyecciones financieras del área de crédito o comentarios de las del área especializada.</div>
+    <div class="nota-guia">Las proyecciones aplican para créditos de largo plazo y se realizan en el formato de Banorte (antiguo). No debe haber ningún Excel abierto o genera una referencia circular.</div>
+    <div class="ta rt" contenteditable="true" data-e="s16" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 17 -->
+  <section class="sec">
+    <h2>17.- Factores de riesgo y mitigantes</h2>
+    <div class="guia">Los factores de riesgo son los que tienen probabilidad de ocurrencia razonable y pueden ocasionar que el crédito no se cubra en las condiciones originales. Los mitigantes reducen esa probabilidad o limitan su impacto · Considerar variaciones macroeconómicas, cambios políticos, ubicación geográfica, contracción de la demanda, limitaciones fiscales y legales, restricciones ecológicas, obsolescencia acelerada, proveedores · Identificar ventajas y desventajas competitivas.</div>
+    <table class="g tabla-est" data-tabla="riesgos">
+      <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+      <tr><td class="sub">Factores de riesgo</td><td class="sub">Factores mitigantes</td></tr>
+      <tr class="fila-datos"><td><div class="ta rt chica" contenteditable="true"></div></td><td><div class="ta rt chica" contenteditable="true"></div></td></tr>
+      <tr class="fila-datos"><td><div class="ta rt chica" contenteditable="true"></div></td><td><div class="ta rt chica" contenteditable="true"></div></td></tr>
+      <tr class="fila-datos"><td><div class="ta rt chica" contenteditable="true"></div></td><td><div class="ta rt chica" contenteditable="true"></div></td></tr>
+      <tr class="fila-datos"><td><div class="ta rt chica" contenteditable="true"></div></td><td><div class="ta rt chica" contenteditable="true"></div></td></tr>
+    </table>
+    <button type="button" class="mas-fila solo-pantalla" data-para="riesgos">+ fila</button> <button type="button" class="menos-fila solo-pantalla" data-para="riesgos">− quitar fila</button>
+  </section>
+
+  <!-- 18 -->
+  <section class="sec">
+    <h2>18.- Análisis de situación patrimonial <span class="opc">(en caso de contar con aval persona física)</span></h2>
+    <div class="guia">Garantías personales (aval, fiador, obligado): si es persona física debe analizarse su patrimonio neto y si los valores de su relación patrimonial son razonables. Especificar datos particulares como edad y estado civil.</div>
+    <div class="ta rt" contenteditable="true" data-e="s18" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 19 -->
+  <section class="sec">
+    <h2>19.- Opinión del área de negocio / jurídico <span class="opc">(en caso de aplicar)</span></h2>
+    <div class="ta rt" contenteditable="true" data-e="s19" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <!-- 20 -->
+  <section class="sec">
+    <h2>20.- Opinión del área de crédito</h2>
+    <h3>Aspectos positivos</h3>
+    <div class="ta rt" contenteditable="true" data-e="s20a" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+    <h3>Aspectos negativos</h3>
+    <div class="ta rt" contenteditable="true" data-e="s20b" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+    <h3>Recomendaciones / faltantes</h3>
+    <div class="ta rt" contenteditable="true" data-e="s20c" data-ph="Escribe aquí. Puedes dar formato al texto e insertar imágenes."></div>
+  </section>
+
+  <table class="g" style="margin-top:22px">
+    <colgroup><col style="width:33.33%"><col style="width:33.33%"><col style="width:33.34%"></colgroup>
+    <tr><td class="sub">Estudio elaborado por</td><td class="sub">Visto Bueno del Supervisor</td><td class="sub">Opinión de área que no elaboró (Crédito o Negocio)</td></tr>
+    <tr style="height:1.5cm"><td><input class="v ee" data-e="firma1"></td><td><input class="v ee" data-e="firma2"></td><td><input class="v ee" data-e="firma3"></td></tr>
+    <tr><td><span class="et c">Puesto</span><input class="v ee" data-e="puesto1"></td><td><span class="et c">Puesto</span><input class="v ee" data-e="puesto2"></td><td><span class="et c">Puesto</span><input class="v ee" data-e="puesto3"></td></tr>
+  </table>
+
+  <div class="pie" style="margin-top:16px;font-weight:normal;font-style:italic">Documento interno · Confidencial — Factor GFC Global, S.A. de C.V., SOFOM E.N.R.</div>
+
+</div>
+</main>
+
+
+<datalist id="dlEstados"></datalist>
+
+<div class="acciones">
+  <div class="estatus" id="estatus" role="status" aria-live="polite"></div>
+  <button type="button" id="btnNA">Rellenar vacíos con N/A</button>
+  <button type="button" id="btnLimpiar">Limpiar</button>
+  <button type="button" class="principal" id="btnImprimir">Imprimir paquete</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var todos = function(sel,ctx){ return Array.prototype.slice.call((ctx||document).querySelectorAll(sel)); };
+
+  /* ---------- Paquetes ---------- */
+  var PAQUETES = {
+    "pm-acreditado":  ["solicitud","carta-control","kyc-cliente","aviso","autorizacion-pm"],
+    "pf-acreditado":  ["solicitud","kyc-cliente","aviso","autorizacion-pm","autorizacion-pf"],
+    "pf-aval":        ["situacion-patrimonial","kyc-propietario","aviso","autorizacion-pm","autorizacion-pf"],
+    "pf-accionistas": ["kyc-propietario","aviso","autorizacion-pf","autorizacion-pm"],
+    "pm-accionistas": ["kyc-propietario","aviso","autorizacion-pm","carta-control"]
+  };
+
+  var ESTADOS = ["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"];
+
+  /* Campos que se copian de otro campo mientras no se editen a mano */
+  var ESPEJO = { "rfcCurp":"rfc", "acreditado":"nombre" };
+
+  /* ================= Celdas que adaptan el texto =================
+     Las celdas de tabla dejan de ser <input> y pasan a ser campos que
+     encogen la letra hasta 72% y, si aun así no cabe, parten en dos renglones. */
+  function convertirCeldas(){
+    todos("table.g td input.v").forEach(function(e){
+      var t = (e.getAttribute("type") || "text").toLowerCase();
+      if(t !== "text" && t !== "email" && t !== "tel") return;
+      if(e.classList.contains("estados")) return;   /* conserva su lista desplegable */
+      var ta = document.createElement("textarea");
+      ta.className = e.className + " celda";
+      ta.rows = 1;
+      ["data-c","data-e","data-suma","data-total","data-extra","maxlength","inputmode","placeholder"].forEach(function(a){
+        if(e.hasAttribute(a)) ta.setAttribute(a, e.getAttribute(a));
+      });
+      if(e.readOnly){ ta.readOnly = true; ta.tabIndex = -1; }
+      if(e.getAttribute("style")) ta.setAttribute("style", e.getAttribute("style"));
+      ta.value = e.value || "";
+      e.parentNode.replaceChild(ta, e);
+    });
+  }
+  convertirCeldas();
+
+  var lienzo = document.createElement("canvas").getContext("2d");
+
+  function medir(txt, est, px){
+    lienzo.font = est.fontStyle + " " + est.fontWeight + " " + px + "px " + est.fontFamily;
+    return lienzo.measureText(txt).width;
+  }
+  function espacio(el, est){
+    return el.clientWidth - (parseFloat(est.paddingLeft) || 0) - (parseFloat(est.paddingRight) || 0) - 1;
+  }
+  function base(el){
+    if(!el.dataset.base){ el.dataset.base = parseFloat(window.getComputedStyle(el).fontSize) || 10; }
+    return parseFloat(el.dataset.base);
+  }
+
+  function encajar(el){
+    if(!el || !el.classList) return;
+    var esCelda = (el.tagName === "TEXTAREA" && el.classList.contains("celda"));
+    var esLinea = (el.tagName === "INPUT" && (el.classList.contains("linea") || el.classList.contains("v") || el.classList.contains("nombre-firma")));
+    if(!esCelda && !esLinea) return;
+    if(el.type === "date" || el.type === "radio" || el.type === "checkbox") return;
+
+    var b = base(el);
+    el.style.fontSize = b + "px";
+    if(esCelda){ el.style.height = "auto"; }
+    var txt = el.value || "";
+    if(!txt){ if(esCelda) el.style.height = ""; return; }
+    if(el.clientWidth === 0) return;               /* está oculto, se ajusta al mostrarse */
+
+    var est = window.getComputedStyle(el);
+    var disp = espacio(el, est);
+    var ancho = medir(txt, est, b);
+    if(ancho > disp && disp > 0){
+      var piso = b * (esCelda ? 0.72 : 0.60);      /* en línea sí puede encoger más: no parte renglón */
+      el.style.fontSize = Math.max(piso, b * disp / ancho * 0.98).toFixed(2) + "px";
+    }
+    if(esCelda){
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    }
+  }
+
+  function encajarTodo(){ todos("textarea.celda, input.linea, input.v, input.nombre-firma").forEach(encajar); }
+
+  var temporizador = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(temporizador);
+    temporizador = setTimeout(encajarTodo, 180);
+  });
+
+  var contenedor = $("documentos");
+  var secciones = {};
+  todos("section.doc").forEach(function(s){
+    secciones[s.dataset.doc] = s;
+    todos("input, select, textarea", s).forEach(function(c,i){
+      c.dataset.k = s.dataset.doc + ":" + i;
+      if(c.type !== "radio" && c.type !== "checkbox" && c.type !== "file"){ c.dataset.def = c.value; }
+    });
+  });
+
+  /* Cada paquete guarda sus propios datos: son personas distintas */
+  var almacen = {};
+  var paqueteActual = null;
+
+  function controles(){ return todos("section.doc input, section.doc select, section.doc textarea"); }
+
+  function guardarPaquete(){
+    if(!paqueteActual) return;
+    var d = {};
+    controles().forEach(function(c){
+      if(c.type === "file") return;
+      d[c.dataset.k] = (c.type === "radio" || c.type === "checkbox") ? c.checked : c.value;
+      if(c.dataset.eco !== undefined){ d["t:" + c.dataset.k] = c.dataset.tocado || ""; }
+    });
+    almacen[paqueteActual] = { datos:d, editados:JSON.parse(JSON.stringify(editados)) };
+  }
+
+  function restaurarPaquete(clave){
+    var reg = almacen[clave];
+    controles().forEach(function(c){
+      if(c.type === "file") return;
+      if(c.type === "radio" || c.type === "checkbox"){
+        c.checked = reg ? !!reg.datos[c.dataset.k] : false;
+      }else{
+        c.value = reg ? (reg.datos[c.dataset.k] || "") : (c.dataset.def || "");
+      }
+      if(c.dataset.eco !== undefined){ c.dataset.tocado = reg ? (reg.datos["t:" + c.dataset.k] || "") : ""; }
+    });
+    editados = reg ? JSON.parse(JSON.stringify(reg.editados)) : {};
+    recalcular();
+    actualizarEcos();
+    encajarTodo();
+  }
+
+  /* Nombre impreso sobre cada línea de firma */
+  function actualizarEcos(){
+    todos("[data-eco]").forEach(function(el){
+      if(el.dataset.tocado === "1") return;          /* se escribió a mano: no se pisa */
+      var claves = el.dataset.eco.split("|"), v = "";
+      for(var i = 0; i < claves.length && !v; i++){
+        var f = document.querySelector('[data-c="' + claves[i] + '"]');
+        if(f){ v = f.value.trim(); }
+      }
+      var texto = (v && v.toUpperCase() !== "N/A") ? v : "";
+      if(el.value !== undefined){ el.value = texto; } else { el.textContent = texto; }
+      encajar(el);
+    });
+  }
+
+  document.addEventListener("input", function(ev){
+    var el = ev.target;
+    if(!el.dataset || el.dataset.eco === undefined) return;
+    el.dataset.tocado = el.value.trim() ? "1" : "";
+    if(!el.value.trim()) actualizarEcos();         /* al vaciarla vuelve a seguir al titular */
+  });
+
+  /* ---------- Catálogo de estados ---------- */
+  var dl = $("dlEstados");
+  ESTADOS.forEach(function(e){
+    var op = document.createElement("option"); op.value = e; dl.appendChild(op);
+  });
+  todos("input.estados").forEach(function(i){ i.setAttribute("list","dlEstados"); });
+
+  /* ---------- Armado del paquete ---------- */
+  function mostrarPaquete(clave){
+    var lista = PAQUETES[clave] || [];
+    todos("section.doc").forEach(function(s){ s.classList.remove("activo"); });
+    lista.forEach(function(d){
+      if(secciones[d]){ contenedor.appendChild(secciones[d]); secciones[d].classList.add("activo"); }
+    });
+    var nav = $("indice");
+    nav.innerHTML = "";
+    lista.forEach(function(d,i){
+      if(!secciones[d]) return;
+      var a = document.createElement("a");
+      a.href = "#doc-" + d;
+      a.textContent = (i+1) + ". " + secciones[d].dataset.nombre;
+      nav.appendChild(a);
+    });
+    actualizarEstatus();
+    encajarTodo();
+  }
+
+  $("paquete").addEventListener("change", function(){
+    guardarPaquete();
+    paqueteActual = this.value;
+    restaurarPaquete(paqueteActual);
+    mostrarPaquete(paqueteActual);
+    window.scrollTo(0,0);
+  });
+
+  /* ---------- Campos compartidos ---------- */
+  var editados = {};
+
+  function propagar(clave, valor, origen){
+    todos('[data-c="' + clave + '"]').forEach(function(el){
+      if(el !== origen && el.value !== valor){ el.value = valor; }
+    });
+    Object.keys(ESPEJO).forEach(function(destino){
+      if(ESPEJO[destino] === clave && !editados[destino]){
+        todos('[data-c="' + destino + '"]').forEach(function(el){ el.value = valor; });
+      }
+    });
+  }
+
+  document.addEventListener("input", function(ev){
+    var el = ev.target;
+    if(!el.dataset || !el.dataset.c) return;
+    editados[el.dataset.c] = true;
+    propagar(el.dataset.c, el.value, el);
+    actualizarEstatus();
+  });
+
+  /* ---------- Normalización de captura ---------- */
+  document.addEventListener("input", function(ev){
+    var el = ev.target;
+    if(el.classList && el.classList.contains("mayus")){
+      var p = el.selectionStart;
+      el.value = el.value.toUpperCase().replace(/[^A-ZÑ&0-9]/g,"");
+      try{ el.setSelectionRange(p,p); }catch(e){}
+    }
+    if(el.classList && el.classList.contains("cp")){
+      el.value = el.value.replace(/\D/g,"");
+    }
+    if(el.dataset && (el.dataset.suma !== undefined)){ recalcular(); }
+    encajar(el);
+    actualizarEcos();
+    actualizarEstatus();
+  });
+
+  /* ---------- Importes y sumas ---------- */
+  function numero(txt){
+    var n = parseFloat(String(txt).replace(/[^0-9.\-]/g,""));
+    return isNaN(n) ? 0 : n;
+  }
+  function fmtMoneda(n){
+    return n.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+
+  function recalcular(){
+    var base = {};
+    todos("[data-suma]").forEach(function(i){
+      var g = i.dataset.suma;
+      base[g] = (base[g] || 0) + numero(i.value);
+    });
+    var tot = {};
+    Object.keys(base).forEach(function(g){ tot[g] = base[g]; });
+    todos("[data-total][data-extra]").forEach(function(i){
+      var g = i.dataset.total;
+      tot[g] = (base[g] || 0) + (base[i.dataset.extra] || 0);
+    });
+    todos("[data-total]").forEach(function(i){
+      var v = tot[i.dataset.total] || 0;
+      i.value = v === 0 ? "" : (i.classList.contains("money") ? fmtMoneda(v) : String(Math.round(v)));
+    });
+    todos("[data-resta]").forEach(function(i){
+      var p = i.dataset.resta.split("-");
+      var v = (tot[p[0]] || 0) - (tot[p[1]] || 0);
+      i.value = (tot[p[0]] || tot[p[1]]) ? fmtMoneda(v) : "";
+    });
+    totalesPasivos();
+  }
+
+  document.addEventListener("blur", function(ev){
+    var el = ev.target;
+    if(el.classList && el.classList.contains("money") && !el.readOnly && el.value.trim() !== ""){
+      el.value = fmtMoneda(numero(el.value));
+      recalcular();
+    }
+    var texto = (el.tagName === "INPUT" || (el.tagName === "TEXTAREA" && el.classList.contains("celda")));
+    if(texto && el.classList.contains("v") && !el.classList.contains("mayus") && !el.classList.contains("money")){
+      el.value = el.value.replace(/[ \t]+/g," ").trim();
+    }
+    encajar(el);
+  }, true);
+
+  /* ---------- Enter avanza al siguiente campo ---------- */
+  document.addEventListener("keydown", function(ev){
+    if(ev.key !== "Enter") return;
+    var el = ev.target;
+    if(!el.classList || (!el.classList.contains("v") && !el.classList.contains("linea"))) return;
+    if(el.tagName === "TEXTAREA" && !el.classList.contains("celda")) return;
+    ev.preventDefault();
+    var raiz = (modo === "estudio") ? "#estudio " : ".doc.activo ";
+    var lista = todos(raiz + "input:not([readonly]):not([type=radio]):not([type=checkbox]), " + raiz + "select, " + raiz + "textarea");
+    var i = lista.indexOf(el);
+    if(i > -1 && lista[i+1]){ lista[i+1].focus(); }
+  });
+
+  /* ---------- Modo: formatos o estudio ---------- */
+  var modo = "formatos";
+
+  function cambiarModo(m){
+    modo = m;
+    var esEstudio = (m === "estudio");
+    $("estudio").hidden = !esEstudio;
+    $("documentos").hidden = esEstudio;
+    $("paquete").hidden = esEstudio;
+    $("lblPaquete").hidden = esEstudio;
+    $("indice").hidden = esEstudio;
+    $("btnNA").hidden = esEstudio;
+    $("tabFormatos").classList.toggle("on", !esEstudio);
+    $("tabEstudio").classList.toggle("on", esEstudio);
+    $("btnImprimir").textContent = esEstudio ? "Imprimir estudio" : "Imprimir paquete";
+    if(esEstudio){ ajustarTextos(); }
+    encajarTodo();
+    actualizarEstatus();
+    window.scrollTo(0,0);
+  }
+
+  $("tabFormatos").addEventListener("click", function(){ cambiarModo("formatos"); });
+  $("tabEstudio").addEventListener("click", function(){ cambiarModo("estudio"); });
+
+  /* ---------- El texto crece con el contenido, para que imprima completo ---------- */
+  function ajustar(t){
+    if(!t || t.tagName !== "TEXTAREA") return;
+    t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px";
+  }
+  function ajustarTextos(){ todos("#estudio textarea").forEach(ajustar); }
+
+  document.addEventListener("input", function(ev){
+    if(ev.target.tagName === "TEXTAREA" && ev.target.closest("#estudio")){ ajustar(ev.target); }
+  });
+
+  function valorDe(el){
+    if(el.value !== undefined) return el.value;
+    return el.textContent || "";
+  }
+
+  /* ================= Editor con formato ================= */
+  var editorActivo = null, rangoGuardado = null;
+
+  function guardarRango(){
+    var s = window.getSelection();
+    if(s.rangeCount && editorActivo && editorActivo.contains(s.anchorNode)){
+      rangoGuardado = s.getRangeAt(0).cloneRange();
+    }
+  }
+  function restaurarRango(){
+    if(!editorActivo) return;
+    editorActivo.focus();
+    if(rangoGuardado){
+      var s = window.getSelection();
+      s.removeAllRanges(); s.addRange(rangoGuardado);
+    }
+  }
+
+  function colocarBarraTexto(){
+    var alto = document.querySelector(".cabecera").offsetHeight;
+    $("barraTexto").style.top = alto + "px";
+  }
+
+  document.addEventListener("focusin", function(ev){
+    var rt = ev.target.closest ? ev.target.closest(".rt") : null;
+    if(rt){
+      editorActivo = rt;
+      colocarBarraTexto();
+      $("barraTexto").hidden = false;
+    }
+  });
+
+  document.addEventListener("mousedown", function(ev){
+    if(ev.target.closest("#barraTexto") || ev.target.closest(".rt") || ev.target.closest("#imgBar")) return;
+    $("barraTexto").hidden = true;
+  });
+
+  ["keyup","mouseup"].forEach(function(e){
+    document.addEventListener(e, function(ev){
+      if(ev.target.closest && ev.target.closest(".rt")) guardarRango();
+    });
+  });
+
+  todos("#barraTexto [data-cmd]").forEach(function(b){
+    b.addEventListener("mousedown", function(e){ e.preventDefault(); });
+    b.addEventListener("click", function(){
+      if(!editorActivo) return;
+      editorActivo.focus();
+      document.execCommand(b.dataset.cmd, false, null);
+      guardarRango();
+      actualizarEstatus();
+    });
+  });
+
+  $("txtTam").addEventListener("mousedown", function(){ guardarRango(); });
+  $("txtTam").addEventListener("change", function(){
+    if(!editorActivo) return;
+    restaurarRango();
+    document.execCommand("fontSize", false, this.value);
+    guardarRango();
+  });
+
+  /* ---------- Imágenes ---------- */
+  function insertarImagen(src){
+    if(!editorActivo) return;
+    restaurarRango();
+    document.execCommand("insertHTML", false, '<img class="img-doc" src="' + src + '" style="width:60%">');
+    guardarRango();
+    actualizarEstatus();
+  }
+  function leerImagen(f){
+    var r = new FileReader();
+    r.onload = function(){ insertarImagen(r.result); };
+    r.readAsDataURL(f);
+  }
+
+  $("btnImagen").addEventListener("mousedown", function(e){ e.preventDefault(); guardarRango(); });
+  $("btnImagen").addEventListener("click", function(){ if(editorActivo) $("imgInput").click(); });
+  $("imgInput").addEventListener("change", function(){
+    Array.prototype.slice.call(this.files || []).forEach(leerImagen);
+    this.value = "";
+  });
+
+  /* Pegar: imágenes del portapapeles y texto sin la basura de Word */
+  var TAGS_OK = {B:1,STRONG:1,I:1,EM:1,U:1,P:1,BR:1,UL:1,OL:1,LI:1,H3:1,H4:1,TABLE:1,THEAD:1,TBODY:1,TR:1,TD:1,TH:1,IMG:1,SPAN:1,DIV:1,FONT:1};
+  function limpiarHTML(html){
+    var caja = document.createElement("div");
+    caja.innerHTML = html;
+    todos("*", caja).forEach(function(nodo){
+      if(!TAGS_OK[nodo.tagName]){
+        while(nodo.firstChild){ nodo.parentNode.insertBefore(nodo.firstChild, nodo); }
+        if(nodo.parentNode) nodo.parentNode.removeChild(nodo);
+        return;
+      }
+      Array.prototype.slice.call(nodo.attributes).forEach(function(a){
+        var conservar = (nodo.tagName === "IMG" && (a.name === "src" || a.name === "style"))
+                     || (nodo.tagName === "FONT" && a.name === "size");
+        if(!conservar) nodo.removeAttribute(a.name);
+      });
+      if(nodo.tagName === "IMG"){
+        nodo.className = "img-doc";
+        if(!/width/.test(nodo.getAttribute("style") || "")) nodo.style.width = "60%";
+      }
+    });
+    return caja.innerHTML;
+  }
+
+  document.addEventListener("paste", function(ev){
+    var rt = ev.target.closest ? ev.target.closest(".rt") : null;
+    if(!rt) return;
+    editorActivo = rt;
+    var dt = ev.clipboardData;
+    if(!dt) return;
+
+    var items = dt.items || [];
+    for(var i = 0; i < items.length; i++){
+      if(items[i].type && items[i].type.indexOf("image") === 0){
+        ev.preventDefault();
+        guardarRango();
+        leerImagen(items[i].getAsFile());
+        return;
+      }
+    }
+    var html = dt.getData("text/html");
+    var texto = dt.getData("text/plain");
+    ev.preventDefault();
+    if(html){ document.execCommand("insertHTML", false, limpiarHTML(html)); }
+    else if(texto){ document.execCommand("insertText", false, texto); }
+    guardarRango();
+    actualizarEstatus();
+  });
+
+  /* Controles al hacer clic sobre una imagen */
+  var imgSel = null;
+  function ocultarImgBar(){ $("imgBar").hidden = true; imgSel = null; }
+
+  document.addEventListener("click", function(ev){
+    if(ev.target.tagName === "IMG" && ev.target.closest(".rt")){
+      imgSel = ev.target;
+      var caja = $("imgBar");
+      caja.hidden = false;
+      var r = imgSel.getBoundingClientRect();
+      var arriba = r.top + window.scrollY - caja.offsetHeight - 6;
+      caja.style.top = Math.max(window.scrollY + 4, arriba) + "px";
+      caja.style.left = (r.left + window.scrollX) + "px";
+      return;
+    }
+    if(!ev.target.closest("#imgBar")) ocultarImgBar();
+  });
+
+  todos("#imgBar [data-w]").forEach(function(b){
+    b.addEventListener("click", function(){ if(imgSel){ imgSel.style.width = b.dataset.w + "%"; } });
+  });
+  todos("#imgBar [data-a]").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(!imgSel) return;
+      imgSel.style.display = "block";
+      imgSel.style.margin = b.dataset.a === "center" ? "6px auto"
+                          : b.dataset.a === "right"  ? "6px 0 6px auto" : "6px auto 6px 0";
+    });
+  });
+  $("imgDel").addEventListener("click", function(){
+    if(imgSel && window.confirm("¿Eliminar la imagen?")){ imgSel.remove(); ocultarImgBar(); actualizarEstatus(); }
+  });
+
+  /* ================= Mapa de ubicación ================= */
+  function pintarMapa(consulta, satelital){
+    var marco = $("mapaMarco");
+    if(!consulta){ marco.innerHTML = ""; return; }
+    marco.innerHTML = '<iframe loading="lazy" referrerpolicy="no-referrer" src="https://maps.google.com/maps?q='
+      + encodeURIComponent(consulta) + '&t=' + (satelital ? "k" : "m") + '&z=16&ie=UTF8&output=embed"></iframe>';
+  }
+  if($("btnMapa")){
+    $("btnMapa").addEventListener("click", function(){ pintarMapa($("mapaBusca").value.trim(), false); });
+    $("btnMapaSat").addEventListener("click", function(){ pintarMapa($("mapaBusca").value.trim(), true); });
+    $("btnMapaNueva").addEventListener("click", function(){
+      var q = $("mapaBusca").value.trim();
+      if(q) window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q), "_blank");
+    });
+    $("mapaBusca").addEventListener("keydown", function(ev){
+      if(ev.key === "Enter"){ ev.preventDefault(); pintarMapa(this.value.trim(), false); }
+    });
+  }
+  document.addEventListener("click", function(ev){
+    if(!ev.target.classList || !ev.target.classList.contains("ver-mapa")) return;
+    var fila = ev.target.closest("tr");
+    var coord = fila.querySelector(".coord"), dir = fila.querySelector(".dir");
+    var q = (coord && coord.value.trim()) || (dir && dir.value.trim()) || "";
+    if(!q){ window.alert("Captura primero la dirección o las coordenadas de esa fila."); return; }
+    $("mapaBusca").value = q;
+    pintarMapa(q, false);
+    $("mapaBusca").scrollIntoView({block:"center"});
+  });
+
+  /* ---------- Fila seleccionada, para poder quitarla ---------- */
+  var filaActiva = null;
+  document.addEventListener("focusin", function(ev){
+    var tr = ev.target.closest ? ev.target.closest("tr.fila-datos") : null;
+    todos("tr.fila-datos.activa").forEach(function(f){ f.classList.remove("activa"); });
+    if(tr){ tr.classList.add("activa"); filaActiva = tr; }
+  });
+
+  /* ---------- Agregar filas a las tablas del estudio ---------- */
+  todos(".mas-fila").forEach(function(b){
+    b.addEventListener("click", function(){
+      var tabla = document.querySelector('[data-tabla="' + b.dataset.para + '"]');
+      if(!tabla) return;
+      var filas = todos("tr.fila-datos", tabla);
+      var nueva = filas[filas.length - 1].cloneNode(true);
+      todos("input, textarea", nueva).forEach(function(i){ i.value = ""; i.removeAttribute("data-c"); });
+      todos(".rt", nueva).forEach(function(d){ d.innerHTML = ""; });
+      todos("textarea.celda", nueva).forEach(function(t){ t.style.fontSize = ""; t.style.height = ""; });
+      filas[filas.length - 1].parentNode.insertBefore(nueva, filas[filas.length - 1].nextSibling);
+      todos("textarea", nueva).forEach(ajustar);
+      recalcular();
+      actualizarEstatus();
+    });
+  });
+
+  todos(".menos-fila").forEach(function(b){
+    b.addEventListener("click", function(){
+      var tabla = document.querySelector('[data-tabla="' + b.dataset.para + '"]');
+      if(!tabla) return;
+      var filas = todos("tr.fila-datos", tabla);
+      if(filas.length <= 1){ window.alert("La tabla debe conservar al menos una fila."); return; }
+      var f = (filaActiva && tabla.contains(filaActiva)) ? filaActiva : filas[filas.length - 1];
+      var conDatos = todos("input, textarea, .rt", f).some(function(i){ return valorDe(i).trim() !== ""; });
+      if(conDatos && !window.confirm("Esa fila tiene datos capturados. ¿Quitarla de todas formas?")) return;
+      f.remove();
+      filaActiva = null;
+      recalcular();
+      actualizarEstatus();
+    });
+  });
+
+  /* ---------- Totales de la tabla de pasivos ---------- */
+  function totalesPasivos(){
+    var cp = 0, lp = 0;
+    todos("tr.fila-pasivo").forEach(function(f){
+      var a = numero(f.querySelector(".pcp").value);
+      var b = numero(f.querySelector(".plp").value);
+      var t = f.querySelector(".ptot");
+      t.value = (a || b) ? fmtMoneda(a + b) : "";
+      cp += a; lp += b;
+    });
+    todos(".ptotal-general").forEach(function(i){
+      i.value = (cp || lp) ? fmtMoneda(cp + lp) : "";
+    });
+  }
+
+  /* ---------- Estatus ---------- */
+  function capturables(){
+    var ambito = (modo === "estudio")
+      ? "#estudio input:not([readonly]):not([type=file]), #estudio select, #estudio textarea, #estudio .rt"
+      : ".doc.activo input:not([readonly]):not([type=radio]):not([type=checkbox]):not([type=file]), .doc.activo select, .doc.activo textarea";
+    return todos(ambito);
+  }
+  function actualizarEstatus(){
+    var c = capturables();
+    var vacios = c.filter(function(i){ return valorDe(i).trim() === ""; }).length;
+    var caja = $("estatus");
+    caja.classList.toggle("listo", vacios === 0);
+    if(modo === "estudio"){
+      var secs = todos("#estudio .sec").length;
+      var escritas = todos("#estudio .sec").filter(function(s){
+        return todos("textarea, input, .rt", s).some(function(i){ return valorDe(i).trim() !== ""; });
+      }).length;
+      caja.classList.toggle("listo", escritas === secs);
+      caja.textContent = escritas + " de " + secs + " secciones con contenido";
+      return;
+    }
+    caja.textContent = vacios === 0
+      ? "Sin campos vacíos. Listo para imprimir."
+      : (c.length - vacios) + " de " + c.length + " campos capturados · " + vacios + " vacíos";
+  }
+
+  /* ---------- Rellenar con N/A ---------- */
+  $("btnNA").addEventListener("click", function(){
+    var n = 0;
+    capturables().forEach(function(i){
+      if(i.value !== undefined && i.value.trim() === "" && !i.classList.contains("money")
+         && !i.classList.contains("cp") && !i.classList.contains("nombre-firma")){
+        i.value = "N/A"; n++;
+      }
+    });
+    actualizarEcos();
+    actualizarEstatus();
+    $("estatus").textContent = n + " campos vacíos marcados con N/A. Revisa antes de imprimir.";
+  });
+
+  /* ---------- Limpiar ---------- */
+  $("btnLimpiar").addEventListener("click", function(){
+    if(modo === "estudio"){
+      if(!window.confirm("¿Borrar el estudio de crédito capturado? Los formatos de expediente no se tocan.")) return;
+      todos("#estudio input:not([readonly]), #estudio textarea").forEach(function(i){ i.value = ""; });
+      todos("#estudio .rt").forEach(function(d){ d.innerHTML = ""; });
+      $("mapaMarco").innerHTML = ""; $("mapaBusca").value = "";
+      recalcular(); ajustarTextos(); actualizarEstatus(); window.scrollTo(0,0);
+      return;
+    }
+    if(!window.confirm("¿Borrar los datos capturados en este paquete? Los demás paquetes no se tocan.")) return;
+    delete almacen[paqueteActual];
+    restaurarPaquete(paqueteActual);
+    actualizarEstatus();
+    window.scrollTo(0,0);
+  });
+
+  /* ---------- Imprimir ---------- */
+  $("btnImprimir").addEventListener("click", function(){
+    recalcular();
+    encajarTodo();
+    if(modo === "estudio"){ ajustarTextos(); }
+    window.print();
+  });
+
+  /* ---------- Logo ---------- */
+  function abrirLogo(){ $("logoInput").click(); }
+  $("btnLogo").addEventListener("click", abrirLogo);
+  todos(".logo-vacio").forEach(function(z){ z.addEventListener("click", abrirLogo); });
+
+  $("logoInput").addEventListener("change", function(){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    var lector = new FileReader();
+    lector.onload = function(){
+      todos("img.logoImg").forEach(function(img){ img.src = lector.result; img.hidden = false; });
+      todos(".logo-vacio").forEach(function(z){ z.style.display = "none"; });
+    };
+    lector.readAsDataURL(f);
+  });
+
+  /* ---------- Arranque ---------- */
+  paqueteActual = $("paquete").value;
+  mostrarPaquete(paqueteActual);
+  ajustarTextos();
+  encajarTodo();
+  recalcular();
+  actualizarEcos();
+  actualizarEstatus();
+
+  // ---------- Enlace directo desde el portal del cliente ----------
+  // Acepta  #pf-aval  para abrir el paquete completo, o
+  //         #pf-aval/situacion-patrimonial  para caer en un formato.
+  // Si el enlace no trae nada valido, no cambia el comportamiento actual.
+  function abrirDesdeEnlace(){
+    var h = (location.hash || "").replace(/^#/, "");
+    if(!h) return;
+    var partes = h.split("/"), paq = partes[0], doc = partes[1];
+    if(!PAQUETES[paq]) return;
+    if(paqueteActual && paqueteActual !== paq) guardarPaquete();
+    $("paquete").value = paq;
+    paqueteActual = paq;
+    restaurarPaquete(paqueteActual);
+    mostrarPaquete(paqueteActual);
+    ajustarTextos(); encajarTodo(); recalcular(); actualizarEcos(); actualizarEstatus();
+    var destino = doc ? document.getElementById("doc-" + doc) : null;
+    if(destino) destino.scrollIntoView({block:"start"}); else window.scrollTo(0,0);
+  }
+  abrirDesdeEnlace();
+  window.addEventListener("hashchange", abrirDesdeEnlace);
+
+  // ---------- Datos que llegan del portal del cliente ----------
+  // El portal y este archivo corren en el mismo navegador y el mismo origen,
+  // asi que el paquete se lee directo: no hay que exportar ni importar nada.
+  // Requiere abrir ambos desde "Abrir portal.bat" (mismo origen http).
+  // El portal en línea manda la clave del paquete en la dirección (?pkg=…).
+  // Cada persona tiene su propio paquete: los datos no se mezclan.
+  var CLAVE_PORTAL = new URLSearchParams(location.search).get("pkg") || "portal_factor_paquete";
+
+  function leerPortal(){
+    try{
+      var r = localStorage.getItem(CLAVE_PORTAL);
+      if(!r) return null;
+      var d = JSON.parse(r);
+      return (d && typeof d === "object" && !Array.isArray(d)) ? d : null;
+    }catch(e){ return null; }
+  }
+
+  // forzar=false solo llena lo vacio; forzar=true pisa tambien lo ya escrito
+  function aplicarPortal(forzar){
+    var d = leerPortal();
+    if(!d) return 0;
+    var n = 0;
+    Object.keys(d).forEach(function(k){
+      var el = document.querySelector('[data-c="' + k + '"]');
+      if(!el) return;
+      var actual = String(el.value == null ? "" : el.value);
+      if(actual.trim() && !forzar) return;
+      if(actual === String(d[k])) return;
+      el.value = d[k];
+      el.dispatchEvent(new Event("input", {bubbles:true}));
+      n++;
+    });
+/*
+  Tipo de persona recibido desde el portal.
+*/
+
+var tipoPersona =
+  String(
+    d.__tipoPersona || ''
+  ).toUpperCase();
+
+
+/* KYC CLIENTE */
+if($("kycPF")){
+  $("kycPF").checked =
+    tipoPersona === "PF";
+}
+
+if($("kycPM")){
+  $("kycPM").checked =
+    tipoPersona === "PM";
+}
+
+
+/* KYC PROPIETARIO REAL */
+if($("prPF")){
+  $("prPF").checked =
+    tipoPersona === "PF";
+}
+
+if($("prPM")){
+  $("prPM").checked =
+    tipoPersona === "PM";
+}
+
+
+/*
+  Clasificación de la personalidad.
+*/
+
+["cl1","cl2","cl3","cl4","cl5","cl6"]
+  .forEach(function(id){
+
+    if($(id)){
+      $(id).checked = false;
+    }
+
+  });
+
+
+var rol =
+  String(
+    d.__rolPersonalidad || ''
+  );
+
+
+var controlPorRol = {
+
+  aval:
+    "cl1",
+
+  representanteLegal:
+    "cl2",
+
+  garante:
+    "cl4",
+
+  accionista:
+    "cl5"
+
+};
+
+
+var idControl =
+  controlPorRol[rol];
+
+
+if(
+  idControl &&
+  $(idControl)
+){
+  $(idControl).checked = true;
+}
+/* Frecuencia estimada de movimientos del KYC */
+var movimientosMaximos =
+  parseInt(
+    d.movimientosMaximos || '',
+    10
+  );
+
+if($("kycFrecB")) $("kycFrecB").checked = false;
+if($("kycFrecM")) $("kycFrecM").checked = false;
+if($("kycFrecA")) $("kycFrecA").checked = false;
+
+if(!isNaN(movimientosMaximos)){
+
+  if(
+    movimientosMaximos >= 1 &&
+    movimientosMaximos <= 2
+  ){
+    if($("kycFrecB")){
+      $("kycFrecB").checked = true;
+    }
+  }
+
+  else if(
+    movimientosMaximos >= 3 &&
+    movimientosMaximos <= 5
+  ){
+    if($("kycFrecM")){
+      $("kycFrecM").checked = true;
+    }
+  }
+
+  else if(movimientosMaximos > 5){
+    if($("kycFrecA")){
+      $("kycFrecA").checked = true;
+    }
+  }
+
+}
+/* Declaratoria KYC — cargo público */
+var cargoPublico =
+  String(
+    d.cargoPublico || ''
+  ).toLowerCase();
+
+if($("kycD1s")) $("kycD1s").checked = false;
+if($("kycD1n")) $("kycD1n").checked = false;
+
+if(cargoPublico === "si"){
+  if($("kycD1s")){
+    $("kycD1s").checked = true;
+  }
+}
+
+if(cargoPublico === "no"){
+  if($("kycD1n")){
+    $("kycD1n").checked = true;
+  }
+}
+    if(n){ actualizarEcos(); recalcular(); encajarTodo(); actualizarEstatus(); }
+    return n;
+  }
+
+  function barraPortal(){
+    var d = leerPortal();
+    if(!d) return;
+    var est = document.createElement("style");
+    est.textContent = "@media print{#barraPortal{display:none!important}}";
+    document.head.appendChild(est);
+
+    var b = document.createElement("div");
+    b.id = "barraPortal";
+    b.style.cssText = "position:sticky;top:0;z-index:60;display:flex;align-items:center;" +
+      "gap:14px;flex-wrap:wrap;padding:9px 16px;background:#E4F3EE;" +
+      "border-bottom:1px solid #31A587;font:600 12px/1.4 Montserrat,Segoe UI,Arial,sans-serif;color:#1B5F56;";
+
+    var quien = d.nombre || d.acreditado || "el portal";
+    var txt = document.createElement("span");
+    txt.id = "barraPortalTxt";
+    txt.textContent = "Datos tomados del portal — " + quien;
+
+    var bt = document.createElement("button");
+    bt.type = "button";
+    bt.textContent = "Volver a cargar";
+    bt.title = "Sobrescribe tambien lo que ya se haya escrito a mano";
+    bt.style.cssText = "margin-left:auto;border:1px solid #22756A;background:#fff;color:#22756A;" +
+      "border-radius:4px;padding:5px 12px;font:700 11px/1 Montserrat,Segoe UI,Arial,sans-serif;" +
+      "letter-spacing:.06em;text-transform:uppercase;cursor:pointer;";
+    bt.addEventListener("click", function(){
+      var n = aplicarPortal(true);
+      txt.textContent = (n ? n : "Ningun") + (n === 1 ? " campo actualizado" : " campos actualizados") + " desde el portal";
+    });
+
+    b.appendChild(txt);
+    b.appendChild(bt);
+    document.body.insertBefore(b, document.body.firstChild);
+
+    var n = aplicarPortal(false);
+    if(n) txt.textContent = n + (n === 1 ? " campo llenado" : " campos llenados") + " desde el portal — " + quien;
+  }
+  barraPortal();
+})();
+</script>
+
+</body>
+</html>
