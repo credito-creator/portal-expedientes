@@ -460,11 +460,11 @@
       <td class="enc" colspan="3"><span class="et c">Nombre</span></td>
       <td class="enc" colspan="2"><span class="et c">Teléfono o correo</span></td>
     </tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="org1Nivel" class="v"></td><td colspan="2"><input data-c="org1Puesto" class="v"></td><td colspan="3"><input data-c="org1Jefe" class="v"></td><td colspan="3"><input data-c="org1Nombre" class="v"></td><td colspan="2"><input data-c="org1Contacto" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="org2Nivel" class="v"></td><td colspan="2"><input data-c="org2Puesto" class="v"></td><td colspan="3"><input data-c="org2Jefe" class="v"></td><td colspan="3"><input data-c="org2Nombre" class="v"></td><td colspan="2"><input data-c="org2Contacto" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="org3Nivel" class="v"></td><td colspan="2"><input data-c="org3Puesto" class="v"></td><td colspan="3"><input data-c="org3Jefe" class="v"></td><td colspan="3"><input data-c="org3Nombre" class="v"></td><td colspan="2"><input data-c="org3Contacto" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="org4Nivel" class="v"></td><td colspan="2"><input data-c="org4Puesto" class="v"></td><td colspan="3"><input data-c="org4Jefe" class="v"></td><td colspan="3"><input data-c="org4Nombre" class="v"></td><td colspan="2"><input data-c="org4Contacto" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="org5Nivel" class="v"></td><td colspan="2"><input data-c="org5Puesto" class="v"></td><td colspan="3"><input data-c="org5Jefe" class="v"></td><td colspan="3"><input data-c="org5Nombre" class="v"></td><td colspan="2"><input data-c="org5Contacto" class="v"></td></tr>
 
     <tr><td class="barra" colspan="12">NUMERO DE COLABORADORES</td></tr>
     <tr>
@@ -476,19 +476,19 @@
       <td class="enc" colspan="2"><span class="et c">Total</span></td>
     </tr>
     <tr>
-      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
-      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
-      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
-      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
-      <td colspan="2"><input class="v num sumar" data-suma="colab"></td>
-      <td colspan="2"><input class="v num calc" data-total="colab" readonly tabindex="-1"></td>
+      <td colspan="2"><input data-c="colOperativos" class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input data-c="colAdministrativos" class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input data-c="colVentas" class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input data-c="colEventuales" class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input data-c="colSindicalizados" class="v num sumar" data-suma="colab"></td>
+      <td colspan="2"><input data-c="colTotal" class="v num calc" data-total="colab" readonly tabindex="-1"></td>
     </tr>
 
     <tr><td class="barra" colspan="12">ACTIVIDAD VULNERABLE</td></tr>
     <tr><td colspan="12"><span class="et">¿Realiza actividades catalogadas como Actividades Vulnerables según el Art. 17 de la LFPIORPI?</span>
       <span class="sn"><input type="radio" name="av1" id="av1s"><label class="bx" for="av1s"></label>SI</span>
       <span class="sn"><input type="radio" name="av1" id="av1n"><label class="bx" for="av1n"></label>NO</span>
-      <span class="sn">¿Cuál?</span><input class="v" style="display:inline-block;width:60%">
+      <span class="sn">¿Cuál?</span><input data-c="avCual" class="v" style="display:inline-block;width:60%">
     </td></tr>
     <tr><td colspan="12"><span class="et">¿Se encuentra dado de alta en el portal SSPLD?</span>
       <span class="sn"><input type="radio" name="av2" id="av2s"><label class="bx" for="av2s"></label>SI</span>
@@ -509,12 +509,12 @@
 
     <tr><td class="barra" colspan="12">INFORMACIÓN REFERENTE AL CRÉDITO SOLICITADO</td></tr>
     <tr><td class="lbl" colspan="2"><span class="et">Tipo de crédito solicitado</span></td><td colspan="10"><input class="v" data-c="tipoCredito"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Monto</span></td><td colspan="4"><input class="v" data-c="montoCredito"></td><td class="lbl" colspan="2"><span class="et c">Moneda</span></td><td colspan="4"><input class="v" value="MXN"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Destino</span></td><td colspan="10"><input class="v"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Plazo</span></td><td colspan="4"><input class="v"></td><td class="lbl" colspan="2"><span class="et c">Gracia</span></td><td colspan="4"><input class="v"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Fuente principal de pago</span></td><td colspan="10"><input class="v"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Garantía</span></td><td colspan="4"><input class="v"></td><td class="lbl" colspan="2"><span class="et c">Garante</span></td><td colspan="4"><input class="v"></td></tr>
-    <tr><td class="lbl" colspan="2"><span class="et">Aval (es)</span></td><td colspan="10"><input class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Monto</span></td><td colspan="4"><input class="v" data-c="montoCredito"></td><td class="lbl" colspan="2"><span class="et c">Moneda</span></td><td colspan="4"><input data-c="moneda" class="v" value="MXN"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Destino</span></td><td colspan="10"><input data-c="destinoCredito" class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Plazo</span></td><td colspan="4"><input data-c="plazo" class="v"></td><td class="lbl" colspan="2"><span class="et c">Gracia</span></td><td colspan="4"><input data-c="gracia" class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Fuente principal de pago</span></td><td colspan="10"><input data-c="origenRecursos" class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Garantía</span></td><td colspan="4"><input data-c="garantia" class="v"></td><td class="lbl" colspan="2"><span class="et c">Garante</span></td><td colspan="4"><input data-c="garante" class="v"></td></tr>
+    <tr><td class="lbl" colspan="2"><span class="et">Aval (es)</span></td><td colspan="10"><input data-c="avales" class="v"></td></tr>
   </table>
 
   <div class="pie">Factor GFC Global, S.A. de C.V. SOFOM ENR, Ave. De la Cantera #9301, Col. Las Misiones, Chihuahua, Chih. C.P. 31115, Tel. (614)311-06-14</div>
@@ -538,17 +538,17 @@
     <tr>
       <td class="lbl" colspan="2"><span class="et b">A) CAPITAL DE TRABAJO</span></td>
       <td colspan="4"><span class="et">Detallar importe, plazo y conceptos específicos tales como Inventarios, financiamiento de cartera, gastos operativos, etc.</span></td>
-      <td colspan="6"><input class="v"></td>
+      <td colspan="6"><input data-c="destA" class="v"></td>
     </tr>
     <tr>
       <td class="lbl" colspan="2"><span class="et b">B) COMPRA ACTIVOS FIJOS</span></td>
       <td colspan="4"><span class="et">Detallar valor del equipo a adquirir anexando cotización, descripción, plazo solicitado.</span></td>
-      <td colspan="6"><input class="v"></td>
+      <td colspan="6"><input data-c="destB" class="v"></td>
     </tr>
     <tr>
       <td class="lbl" colspan="2"><span class="et b">C) SUSTITUCIÓN DE PASIVOS</span></td>
       <td colspan="4"><span class="et">Detallar importe solicitado, plazo, origen del pasivo, vencimiento, acreedor y garantías otorgadas</span></td>
-      <td colspan="6"><input class="v"></td>
+      <td colspan="6"><input data-c="destC" class="v"></td>
     </tr>
 
     <tr><td class="barra" colspan="12">GARANTÍAS OFRECIDAS</td></tr>
@@ -558,9 +558,9 @@
       <td class="enc" colspan="2"><span class="et c b">Valor</span></td>
       <td class="enc" colspan="2"><span class="et c b">Datos de registro</span></td>
     </tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="5"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td></tr>
+    <tr><td colspan="3"><input data-c="gar1Desc" class="v"></td><td colspan="5"><input data-c="gar1Dom" class="v"></td><td colspan="2"><input data-c="gar1Valor" class="v num"></td><td colspan="2"><input data-c="gar1Registro" class="v"></td></tr>
+    <tr><td colspan="3"><input data-c="gar2Desc" class="v"></td><td colspan="5"><input data-c="gar2Dom" class="v"></td><td colspan="2"><input data-c="gar2Valor" class="v num"></td><td colspan="2"><input data-c="gar2Registro" class="v"></td></tr>
+    <tr><td colspan="3"><input data-c="gar3Desc" class="v"></td><td colspan="5"><input data-c="gar3Dom" class="v"></td><td colspan="2"><input data-c="gar3Valor" class="v num"></td><td colspan="2"><input data-c="gar3Registro" class="v"></td></tr>
 
     <tr><td class="barra" colspan="12">PRODUCTOS</td></tr>
     <tr>
@@ -569,9 +569,9 @@
       <td class="enc" colspan="3"><span class="et c b">Aplicaciones (uso final del producto)</span></td>
       <td class="enc" colspan="2"><span class="et c b">% ingreso</span></td>
     </tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
-    <tr><td colspan="3"><input class="v"></td><td colspan="4"><input class="v"></td><td colspan="3"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="3"><input data-c="prod1Nombre" class="v"></td><td colspan="4"><input data-c="prod1Capacidad" class="v"></td><td colspan="3"><input data-c="prod1Aplicacion" class="v"></td><td colspan="2"><input data-c="prod1Pct" class="v num"></td></tr>
+    <tr><td colspan="3"><input data-c="prod2Nombre" class="v"></td><td colspan="4"><input data-c="prod2Capacidad" class="v"></td><td colspan="3"><input data-c="prod2Aplicacion" class="v"></td><td colspan="2"><input data-c="prod2Pct" class="v num"></td></tr>
+    <tr><td colspan="3"><input data-c="prod3Nombre" class="v"></td><td colspan="4"><input data-c="prod3Capacidad" class="v"></td><td colspan="3"><input data-c="prod3Aplicacion" class="v"></td><td colspan="2"><input data-c="prod3Pct" class="v num"></td></tr>
 
     <tr><td class="barra" colspan="12">MERCADO</td></tr>
     <tr>
@@ -582,15 +582,15 @@
       <td class="enc" colspan="2"><span class="et c">Plazos de compra</span></td>
       <td class="enc" colspan="2"><span class="et c">% de Compras</span></td>
     </tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v"></td><td colspan="2"><input class="v num"></td></tr>
+    <tr><td colspan="2"><input data-c="cli1Nombre" class="v"></td><td colspan="2"><input data-c="cli1Plazo" class="v"></td><td colspan="2"><input data-c="cli1Pct" class="v num"></td><td colspan="2"><input data-c="prv1Nombre" class="v"></td><td colspan="2"><input data-c="prv1Plazo" class="v"></td><td colspan="2"><input data-c="prv1Pct" class="v num"></td></tr>
+    <tr><td colspan="2"><input data-c="cli2Nombre" class="v"></td><td colspan="2"><input data-c="cli2Plazo" class="v"></td><td colspan="2"><input data-c="cli2Pct" class="v num"></td><td colspan="2"><input data-c="prv2Nombre" class="v"></td><td colspan="2"><input data-c="prv2Plazo" class="v"></td><td colspan="2"><input data-c="prv2Pct" class="v num"></td></tr>
+    <tr><td colspan="2"><input data-c="cli3Nombre" class="v"></td><td colspan="2"><input data-c="cli3Plazo" class="v"></td><td colspan="2"><input data-c="cli3Pct" class="v num"></td><td colspan="2"><input data-c="prv3Nombre" class="v"></td><td colspan="2"><input data-c="prv3Plazo" class="v"></td><td colspan="2"><input data-c="prv3Pct" class="v num"></td></tr>
     <tr>
       <td class="enc" colspan="2"><span class="et c">Número de clientes</span></td>
-      <td colspan="2"><input class="v num"></td>
+      <td colspan="2"><input data-c="numClientes" class="v num"></td>
       <td class="sinborde" colspan="2"></td>
       <td class="enc" colspan="2"><span class="et c">Número de proveedores</span></td>
-      <td colspan="2"><input class="v num"></td>
+      <td colspan="2"><input data-c="numProveedores" class="v num"></td>
       <td class="sinborde" colspan="2"></td>
     </tr>
 
@@ -626,12 +626,12 @@
       <td class="enc" colspan="2"><span class="et c">Tipo de Crédito</span></td>
       <td class="enc"><span class="et c">Garantía</span></td>
       <td class="enc"><span class="et c">Tasa</span></td>
-      <td class="enc"><span class="et c">Garantía</span></td>
+      <td class="enc"><span class="et c">Vencimiento</span></td>
       <td class="enc"><span class="et c">Destino</span></td>
     </tr>
-    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
-    <tr><td colspan="2"><input class="v"></td><td><input class="v"></td><td colspan="2"><input class="v num"></td><td><input class="v num"></td><td colspan="2"><input class="v"></td><td><input class="v"></td><td><input class="v num"></td><td><input class="v"></td><td><input class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="ci1Inst" class="v"></td><td><input data-c="ci1Moneda" class="v"></td><td colspan="2"><input data-c="ci1Linea" class="v num"></td><td><input data-c="ci1Saldo" class="v num"></td><td colspan="2"><input data-c="ci1Tipo" class="v"></td><td><input data-c="ci1Garantia" class="v"></td><td><input data-c="ci1Tasa" class="v num"></td><td><input data-c="ci1Vencimiento" class="v"></td><td><input data-c="ci1Destino" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="ci2Inst" class="v"></td><td><input data-c="ci2Moneda" class="v"></td><td colspan="2"><input data-c="ci2Linea" class="v num"></td><td><input data-c="ci2Saldo" class="v num"></td><td colspan="2"><input data-c="ci2Tipo" class="v"></td><td><input data-c="ci2Garantia" class="v"></td><td><input data-c="ci2Tasa" class="v num"></td><td><input data-c="ci2Vencimiento" class="v"></td><td><input data-c="ci2Destino" class="v"></td></tr>
+    <tr><td colspan="2"><input data-c="ci3Inst" class="v"></td><td><input data-c="ci3Moneda" class="v"></td><td colspan="2"><input data-c="ci3Linea" class="v num"></td><td><input data-c="ci3Saldo" class="v num"></td><td colspan="2"><input data-c="ci3Tipo" class="v"></td><td><input data-c="ci3Garantia" class="v"></td><td><input data-c="ci3Tasa" class="v num"></td><td><input data-c="ci3Vencimiento" class="v"></td><td><input data-c="ci3Destino" class="v"></td></tr>
 
     <tr><td class="barra" colspan="12">SOLICITANTE</td></tr>
     <tr>
