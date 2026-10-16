@@ -458,6 +458,11 @@ tbody tr:last-child td{border-bottom:0}
 .gc-inv{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
 .gc-inv:last-child{border-bottom:0}
 
+.tb-t{min-width:0;width:100%;font-size:13px}
+.tb-t th{padding:7px 8px;font-size:10px}
+.tb-t td{padding:4px 4px;border-bottom:1px solid var(--line-2)}
+.tb-t input{width:100%;min-width:90px;background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:13px}
+.tb-quitar{background:none;border:none;color:var(--bad);font-size:16px;cursor:pointer;padding:0 6px}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -5703,6 +5708,11 @@ function apiPortal(accion, datos){
     body: JSON.stringify({ accion: accion, datos: datos || {}, sesion: SESION ? SESION.sesion : null })
   })
   .then(function(r){ return r.json(); })
+  .then(function(r){
+    // Respuesta inesperada (vacía o sin formato): se trata como error, no como éxito
+    if (!r || typeof r !== 'object') return { ok:false, codigo:'RED', mensaje:'Respuesta inesperada del servidor.' };
+    return r;
+  })
   .catch(function(){
     return { ok:false, codigo:'RED', mensaje:'No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.' };
   });
@@ -5919,6 +5929,14 @@ function cerrarSesionPortal(){
   };
   if (SESION) apiPortal('cerrarSesion').then(salir); else salir();
 }
+
+window.addEventListener('error', function(e){
+  try { toast('Ocurrió un error en el portal: ' + (e.message || 'desconocido') + '. Si se repite, avisa a Factor GFC.'); } catch(x){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try { toast('Ocurrió un error en el portal: ' + ((e.reason && e.reason.message) || 'desconocido') + '.'); } catch(x){}
+  console.error(e.reason);
+});
 
 arrancarConexion();
 
@@ -6196,7 +6214,16 @@ function recargarGestion(liga){
     COORD.gestion.invitaciones = rs[3] ? rs[3].datos.filter(function(i){
       return i.idCredito === op.idCredito || i.idCredito === '*';
     }) : [];
-    dibujarGestion(liga);
+    try {
+      dibujarGestion(liga);
+    } catch (err) {
+      console.error('Error al dibujar Gestionar:', err);
+      $('gcCuerpo').innerHTML = '<p class="acceso-error">No se pudo mostrar esta ventana: ' + esc(err && err.message ? err.message : String(err)) +
+        '.<br>Manda una captura de este mensaje a quien administra el portal.</p>';
+    }
+  }).catch(function(err){
+    console.error('Error al cargar Gestionar:', err);
+    $('gcCuerpo').innerHTML = '<p class="acceso-error">No se pudo cargar esta ventana: ' + esc(err && err.message ? err.message : String(err)) + '.</p>';
   });
 }
 
@@ -7066,6 +7093,10 @@ function campoHTML(f, valor, pre, bloqueado){
         f.ops.map(function(o){ return '<option' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>'; break;
     case 'fecha':
       ctl = '<input type="date" id="' + id + '" value="' + esc(v.slice(0, 10)) + '" max="' + new Date().toISOString().slice(0, 10) + '"' + dis + '>'; break;
+    case 'fechaLibre':
+      ctl = '<input type="date" id="' + id + '" value="' + esc(v.slice(0, 10)) + '"' + dis + '>'; break;
+    case 'tabla':
+      return tablaHTML(f, Array.isArray(valor) ? valor : [], pre);
     case 'numero':
       ctl = '<input id="' + id + '" inputmode="decimal" autocomplete="off" value="' + esc(v) + '" placeholder="0"' + dis + '>'; break;
     case 'entero':
@@ -7091,6 +7122,26 @@ function campoHTML(f, valor, pre, bloqueado){
     (f.ayuda ? '<span class="hint">' + esc(f.ayuda) + '</span>' : '') + '</div>';
 }
 
+function filaTablaHTML(f, r){
+  return '<tr data-fila>' + f.cols.map(function(col){
+    return '<td><input data-col="' + esc(col.c) + '" value="' + esc(valorCampo(r[col.c])) + '"' +
+      (col.t === 'numero' ? ' inputmode="decimal"' : '') + ' autocomplete="off"></td>';
+  }).join('') + '<td><button type="button" class="tb-quitar" title="Quitar renglón" data-quitar-fila>×</button></td></tr>';
+}
+
+function tablaHTML(f, filas, pre){
+  var lista = filas.length ? filas : [{}];
+  return '<div class="f wide" data-campo="' + esc(f.c) + '">' +
+    '<label>' + esc(f.e) + (f.req ? ' <span class="req">*</span>' : '') + '</label>' +
+    '<div class="tb" id="' + pre + f.c + '" data-max="' + (f.max || 10) + '"><div class="scroll-x"><table class="tb-t"><thead><tr>' +
+      f.cols.map(function(col){ return '<th>' + esc(col.e) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>' +
+      lista.map(function(r){ return filaTablaHTML(f, r); }).join('') +
+    '</tbody></table></div>' +
+    '<button type="button" class="gc-link" data-agregar-fila="' + esc(f.c) + '"' + (lista.length >= (f.max || 10) ? ' hidden' : '') + '>+ Agregar renglón</button>' +
+    ' <span class="hint">Máximo ' + (f.max || 10) + ' renglones.</span></div>' +
+    (f.ayuda ? '<span class="hint">' + esc(f.ayuda) + '</span>' : '') + '</div>';
+}
+
 function formularioHTML(def, datos, pre, bloqueados){
   var html = '', abierto = false;
   def.forEach(function(f){
@@ -7111,7 +7162,16 @@ function leerFormulario(def, pre){
   def.forEach(function(f){
     if (f.sec) return;
     var el = $(pre + f.c);
-    if (el) d[f.c] = el.value.trim();
+    if (!el) return;
+    if (f.t === 'tabla') {
+      d[f.c] = Array.prototype.map.call(el.querySelectorAll('tr[data-fila]'), function(tr){
+        var r = {};
+        Array.prototype.forEach.call(tr.querySelectorAll('[data-col]'), function(i){ r[i.getAttribute('data-col')] = i.value.trim(); });
+        return r;
+      }).filter(function(r){ return Object.keys(r).some(function(k){ return r[k]; }); });
+      return;
+    }
+    d[f.c] = el.value.trim();
   });
   return d;
 }
@@ -7129,11 +7189,29 @@ function aplicarVisibilidad(def, pre, cont){
 
 function ligarFormulario(def, pre, cont, alCambiar){
   aplicarVisibilidad(def, pre, cont);
-  Array.prototype.forEach.call(cont.querySelectorAll('input,select,textarea'), function(el){
-    var f = function(){ aplicarVisibilidad(def, pre, cont); if (alCambiar) alCambiar(); };
-    el.addEventListener('input', f);
-    el.addEventListener('change', f);
-  });
+  var cambio = function(){ aplicarVisibilidad(def, pre, cont); if (alCambiar) alCambiar(); };
+  // Delegación: también funciona con los renglones que se agregan después
+  cont.oninput = cambio;
+  cont.onchange = cambio;
+  cont.onclick = function(ev){
+    var agregar = ev.target.closest('[data-agregar-fila]');
+    if (agregar) {
+      var f = def.filter(function(x){ return x.c === agregar.getAttribute('data-agregar-fila'); })[0];
+      var caja = $(pre + f.c), cuerpo = caja.querySelector('tbody');
+      cuerpo.insertAdjacentHTML('beforeend', filaTablaHTML(f, {}));
+      if (cuerpo.querySelectorAll('tr[data-fila]').length >= (f.max || 10)) agregar.hidden = true;
+      cambio();
+      return;
+    }
+    var quitar = ev.target.closest('[data-quitar-fila]');
+    if (quitar) {
+      var caja2 = quitar.closest('.tb'), cuerpo2 = caja2.querySelector('tbody');
+      if (cuerpo2.querySelectorAll('tr[data-fila]').length > 1) quitar.closest('tr').remove();
+      else Array.prototype.forEach.call(quitar.closest('tr').querySelectorAll('input'), function(i){ i.value = ''; });
+      caja2.querySelector('[data-agregar-fila]').hidden = false;
+      cambio();
+    }
+  };
 }
 
 function estadoCaptura(info, nombre){
