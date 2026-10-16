@@ -531,7 +531,7 @@ tbody tr:last-child td{border-bottom:0}
   <button class="tab" role="tab" aria-selected="true"  data-p="p-datos" data-roles="cliente,analista">Datos de la empresa</button>
   <button class="tab" role="tab" aria-selected="false" data-p="p-docs"  data-roles="cliente,jefe,analista">Documentos <span class="n" id="nDocs">0</span></button>
   <button class="tab" role="tab" aria-selected="false" data-p="p-linea" data-roles="cliente,jefe,analista">Línea de tiempo</button>
-  <button class="tab" role="tab" aria-selected="false" data-p="p-exec"  data-roles="analista">Expediente</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="p-exec"  data-roles="jefe,analista">Revisión <span class="n" id="nRev">0</span></button>
 </div></div>
 
 <main>
@@ -1230,14 +1230,22 @@ tbody tr:last-child td{border-bottom:0}
 <!-- ============ EXEC ============ -->
 <section class="panel" id="p-exec" hidden>
   <div class="intro" style="margin-bottom:18px">
-    <h1>Lo que ve tu equipo.</h1>
-    <p>La misma operación del otro lado del mostrador: completitud en tres niveles, reglas duras y el semáforo de «Listo para comité».</p>
+    <h1>Bandeja de revisión.</h1>
+    <p>Todos los documentos que esperan dictamen, del más antiguo al más reciente. Al aceptar o rechazar, el cliente ve el resultado en su portal.</p>
   </div>
-  <div id="gate"></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th style="width:34%">Documento</th><th style="width:16%">De quién</th><th style="width:13%">Estado</th><th style="width:15%">Vigencia</th><th>Observación del sistema</th><th style="width:9%">Dictamen</th></tr></thead>
-    <tbody id="execBody"></tbody>
-  </table></div>
+  <div class="cc-barra">
+    <label class="gc-conds" style="font-size:13px"><span><input type="checkbox" id="rvMios"> Solo mis clientes</span></label>
+    <span class="esp"></span>
+    <button type="button" class="btn btn-g btn-sm" id="rvActualizar">Actualizar</button>
+  </div>
+  <div class="panel-card">
+    <div class="scroll-x"><table class="tabla-coord">
+      <thead><tr>
+        <th>Cliente</th><th>Crédito</th><th>Persona</th><th>Documento</th><th>Subido</th><th></th>
+      </tr></thead>
+      <tbody id="rvBody"></tbody>
+    </table></div>
+  </div>
 </section>
 
 </main>
@@ -5612,6 +5620,13 @@ function convertirArchivoBase64(archivo) {
   </div>
 </div></div>
 
+<!-- ============ REVISIÓN: dictaminar un documento ============ -->
+<div class="ov" id="ovRev"><div class="mo mo-ancho" role="dialog" aria-modal="true" aria-labelledby="rvTit">
+  <div class="mo-h"><b id="rvTit">Revisar documento</b><span id="rvSub"></span></div>
+  <div class="mo-b" id="rvCuerpo"></div>
+  <div class="mo-f"><button type="button" class="btn btn-g btn-sm" id="rvCerrar">Cerrar</button></div>
+</div></div>
+
 <!-- ============ COORDINACIÓN: altas ============ -->
 <div class="ov" id="ovAlta"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="altaTit">
   <div class="mo-h"><b id="altaTit">Alta</b><span id="altaSub"></span></div>
@@ -5864,10 +5879,11 @@ function entrarSinCredito(){
   DB.rol = ROL_PORTAL[u.rol] || 'jefe';
   aplicarRol();
   Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
-    t.hidden = t.getAttribute('data-p') !== 'p-coord';
+    t.hidden = ['p-coord', 'p-exec'].indexOf(t.getAttribute('data-p')) === -1;
   });
   irTab('p-coord');
   pintarCoord();
+  pintarExec();
 
   $('opNombre').textContent = 'Cartera';
   $('opDet').textContent = 'Sin crédito seleccionado';
@@ -6679,6 +6695,268 @@ $('suOk').addEventListener('click', enviarSubir);
 $('suCancel').addEventListener('click', function(){ $('ovSubir').classList.remove('on'); });
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && $('ovSubir').classList.contains('on')) $('ovSubir').classList.remove('on');
+});
+
+</script>
+
+<script>
+/* ============================================================
+   REVISIÓN DEL ANALISTA — Paso 4
+
+   - Pestaña "Revisión": bandeja con todo lo que espera dictamen
+     (todos los créditos), con filtro "solo mis clientes".
+   - Ventana de revisión (desde la bandeja o desde Documentos):
+     ver el archivo, historial de versiones, aceptar, rechazar con
+     observación, marcar el original físico, "No aplica" y reactivar.
+
+   Esta función pintarExec() reemplaza a la de demostración.
+   ============================================================ */
+
+var REV = { lista: null, cargando: false, actual: null };
+
+function pintarExec(){
+  if (!SESION || SESION.usuario.rol === 'Cliente' || !$('rvBody')) return;
+  if (!REV.lista && !REV.cargando) return cargarBandeja();
+  if (REV.lista) dibujarBandeja();
+}
+
+function cargarBandeja(){
+  REV.cargando = true;
+  $('rvBody').innerHTML = '<tr><td colspan="6" class="vacio">Cargando bandeja…</td></tr>';
+  return apiPortal('pendientesRevision', {}).then(function(r){
+    REV.cargando = false;
+    REV.lista = r.ok && Array.isArray(r.datos) ? r.datos : [];
+    if (!r.ok) toast(r.mensaje);
+    dibujarBandeja();
+  });
+}
+
+function hace(v){
+  var d = new Date(v);
+  if (isNaN(d)) return '';
+  var dias = Math.floor((Date.now() - d.getTime()) / 86400000);
+  return dias <= 0 ? 'hoy' : (dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días');
+}
+
+function dibujarBandeja(){
+  var mios = $('rvMios').checked;
+  var yo = SESION.usuario.email;
+  var filas = (REV.lista || []).filter(function(x){ return !mios || x.analista === yo; });
+
+  var nRev = $('nRev'); if (nRev) nRev.textContent = (REV.lista || []).length;
+
+  if (!filas.length) {
+    $('rvBody').innerHTML = '<tr><td colspan="6" class="vacio">' +
+      (mios ? 'Ninguno de tus clientes tiene documentos esperando revisión.' : 'No hay documentos esperando revisión.') + '</td></tr>';
+    return;
+  }
+
+  $('rvBody').innerHTML = filas.map(function(x){
+    var viejo = (Date.now() - new Date(x.subidoEl).getTime()) > 3 * 86400000;
+    return '<tr>' +
+      '<td><b>' + esc(x.cliente) + '</b><span class="sub">' + esc(x.idCliente) + (x.analista ? ' · ' + esc(x.analista) : '') + '</span></td>' +
+      '<td>' + esc(x.idCredito) + '</td>' +
+      '<td>' + esc(x.persona) + '</td>' +
+      '<td><b>' + esc(x.documento) + '</b><span class="sub">Versión ' + esc(String(x.version || 1)) + '</span></td>' +
+      '<td' + (viejo ? ' class="alto"' : '') + '>' + esc(hace(x.subidoEl)) + '<span class="sub">' + esc(x.subidoPor) + '</span></td>' +
+      '<td><div class="cc-acc"><button type="button" class="btn btn-p btn-sm" data-revisar="' + esc(x.idChecklist) + '">Revisar</button></div></td>' +
+      '</tr>';
+  }).join('');
+
+  Array.prototype.forEach.call($('rvBody').querySelectorAll('[data-revisar]'), function(b){
+    b.onclick = function(){
+      var x = REV.lista.filter(function(y){ return y.idChecklist === b.getAttribute('data-revisar'); })[0];
+      abrirRevision({
+        idChecklist: x.idChecklist, documento: x.documento, persona: x.persona,
+        contexto: x.cliente + ' · ' + x.idCredito,
+        estado: 'Entregado', estadoRevision: 'En revisión', fisico: null
+      });
+    };
+  });
+}
+
+
+// ============================================================
+// VENTANA DE REVISIÓN
+// ============================================================
+
+function abrirRevision(ctx){
+  REV.actual = ctx;
+  $('rvTit').textContent = ctx.documento;
+  $('rvSub').textContent = ctx.persona + (ctx.contexto ? ' · ' + ctx.contexto : '');
+  $('rvCuerpo').innerHTML = '<p class="gc-nota">Cargando historial…</p>';
+  $('ovRev').classList.add('on');
+
+  apiPortal('historialDocumento', { idChecklist: ctx.idChecklist }).then(function(r){
+    if (!r.ok) { $('rvCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    ctx.versiones = r.datos;
+    dibujarRevision();
+  });
+}
+
+function dibujarRevision(){
+  var c = REV.actual, v = c.versiones || [];
+  var vigente = v.filter(function(x){ return x.estado === 'Vigente'; })[0];
+  var enRevision = vigente && !vigente.dictamen;
+  var html = '';
+
+  // ---------- Dictamen del archivo vigente ----------
+  html += '<div class="gc-sec"><div class="gc-sec-h"><span>Dictamen</span>' +
+    (vigente ? '<button type="button" class="gc-link" data-ver-arch="' + esc(vigente.idArchivo) + '">Ver archivo vigente</button>' : '') +
+    '</div><div class="gc-sec-b">';
+
+  if (!vigente) {
+    html += '<p class="gc-nota">Todavía no se ha subido ningún archivo para este documento.</p>';
+  } else {
+    html += '<p class="gc-nota">Archivo vigente: <b>' + esc(vigente.nombreArchivo) + '</b> · versión ' + esc(String(vigente.version)) +
+      ' · subido por ' + esc(vigente.subidoPor) + ' el ' + esc(fechaMx(vigente.subidoEl)) +
+      (vigente.dictamen ? ' · <b>' + esc(vigente.dictamen) + '</b> por ' + esc(vigente.dictaminadoPor || '') : ' · <b>sin dictamen</b>') + '</p>';
+    html += '<div class="f"><label>Observación para el cliente</label>' +
+      '<textarea id="rvObs" rows="3" placeholder="Obligatoria para rechazar. Escribe qué debe corregir, por ejemplo: la imagen está cortada, falta el reverso."></textarea></div>';
+    html += '<div class="gc-fila">' +
+      '<button type="button" class="btn btn-p btn-sm" id="rvAceptar"' + (vigente.dictamen === 'Aceptado' ? ' disabled' : '') + '>Aceptar</button>' +
+      '<button type="button" class="btn btn-g btn-sm" id="rvRechazar" style="color:var(--bad);border-color:var(--bad-line)"' + (vigente.dictamen === 'Rechazado' ? ' disabled' : '') + '>Rechazar</button>' +
+      '</div>';
+    if (!enRevision) html += '<p class="gc-nota">Este archivo ya tiene dictamen. Si lo cambias, escribe el motivo en la observación; queda registrado.</p>';
+  }
+  html += '</div></div>';
+
+  // ---------- Original físico y excepciones ----------
+  html += '<div class="gc-sec"><div class="gc-sec-h"><span>Control del expediente</span></div><div class="gc-sec-b">' +
+    '<div class="gc-fila">' +
+      '<button type="button" class="btn btn-g btn-sm" data-fisico="1">Original físico recibido</button>' +
+      '<button type="button" class="btn btn-g btn-sm" data-fisico="0">Sin original físico</button>' +
+      (c.fisico === true ? '<span class="chip c-ok">Original recibido</span>' : (c.fisico === false ? '<span class="chip c-pend">Sin original</span>' : '')) +
+    '</div>';
+
+  if (c.estado === 'Pendiente') {
+    html += '<div class="gc-fila"><div class="f"><label>Justificación para “No aplica”</label>' +
+      '<input id="rvJust" placeholder="Ej. Excepción autorizada por comité del 15/10/2026"></div>' +
+      '<button type="button" class="btn btn-g btn-sm" id="rvNoAplica">Marcar No aplica</button></div>';
+  }
+  if (c.estado === 'No aplica') {
+    html += '<div class="gc-fila"><button type="button" class="btn btn-g btn-sm" id="rvReactivar">Reactivar documento</button>' +
+      '<span class="gc-nota">Vuelve a Pendiente para que se pida al cliente.</span></div>';
+  }
+  html += '</div></div>';
+
+  // ---------- Historial ----------
+  html += '<div class="gc-sec"><div class="gc-sec-h"><span>Historial de versiones</span></div><div class="gc-sec-b">' +
+    (v.length ? v.map(function(x){
+      var cls = x.dictamen === 'Aceptado' ? 'c-ok' : (x.dictamen === 'Rechazado' ? 'c-bad' : 'c-pend');
+      return '<div class="gc-inv"><div>' +
+        '<span class="chip ' + cls + '">' + esc(x.dictamen || (x.estado === 'Vigente' ? 'En revisión' : 'Sin dictamen')) + '</span> ' +
+        'v' + esc(String(x.version)) + ' · ' + esc(x.nombreArchivo) + (x.estado === 'Reemplazado' ? ' · reemplazado' : '') +
+        '<span class="sub">Subido por ' + esc(x.subidoPor) + ' el ' + esc(fechaMx(x.subidoEl)) +
+        (x.dictaminadoPor ? ' · dictaminó ' + esc(x.dictaminadoPor) + ' el ' + esc(fechaMx(x.dictaminadoEl)) : '') + '</span>' +
+        (x.observacion ? '<span class="sub">“' + esc(x.observacion) + '”</span>' : '') +
+        '</div><button type="button" class="gc-link" data-ver-arch="' + esc(x.idArchivo) + '">Ver</button></div>';
+    }).join('') : '<p class="gc-nota">Sin versiones.</p>') +
+    '</div></div>';
+
+  $('rvCuerpo').innerHTML = html;
+  ligarRevision();
+}
+
+function ligarRevision(){
+  var c = REV.actual;
+  var despues = function(btn, msg){
+    return function(r){
+      ocupado(btn, false);
+      if (!r.ok) return toast(r.mensaje);
+      toast(msg);
+      $('ovRev').classList.remove('on');
+      REV.lista = null;
+      if (!$('p-exec').hidden) cargarBandeja();
+      if (DOCS.exp) recargarDocs();
+    };
+  };
+
+  Array.prototype.forEach.call($('rvCuerpo').querySelectorAll('[data-ver-arch]'), function(b){
+    b.onclick = function(){ verArchivo(b.getAttribute('data-ver-arch'), b); };
+  });
+
+  if ($('rvAceptar')) $('rvAceptar').onclick = function(){
+    var b = this; ocupado(b, true, 'Aceptando…');
+    apiPortal('dictaminarDocumento', { idChecklist: c.idChecklist, resultado: 'Aceptado', observacion: $('rvObs').value.trim() })
+      .then(despues(b, 'Documento aceptado. El cliente ya lo ve como aceptado.'));
+  };
+  if ($('rvRechazar')) $('rvRechazar').onclick = function(){
+    var obs = $('rvObs').value.trim();
+    if (obs.length < 5) { $('rvObs').focus(); return toast('Escribe en la observación qué debe corregir el cliente.'); }
+    var b = this; ocupado(b, true, 'Rechazando…');
+    apiPortal('dictaminarDocumento', { idChecklist: c.idChecklist, resultado: 'Rechazado', observacion: obs })
+      .then(despues(b, 'Documento rechazado. El cliente verá tu observación.'));
+  };
+
+  Array.prototype.forEach.call($('rvCuerpo').querySelectorAll('[data-fisico]'), function(b){
+    b.onclick = function(){
+      var si = b.getAttribute('data-fisico') === '1';
+      ocupado(b, true);
+      apiPortal('marcarFisico', { idChecklist: c.idChecklist, fisico: si }).then(function(r){
+        ocupado(b, false);
+        if (!r.ok) return toast(r.mensaje);
+        c.fisico = si;
+        toast(si ? 'Original físico marcado como recibido.' : 'Original físico marcado como no recibido.');
+        dibujarRevision();
+        if (DOCS.exp) recargarDocs();
+      });
+    };
+  });
+
+  if ($('rvNoAplica')) $('rvNoAplica').onclick = function(){
+    var j = $('rvJust').value.trim();
+    if (j.length < 5) { $('rvJust').focus(); return toast('Escribe la justificación.'); }
+    var b = this; ocupado(b, true);
+    apiPortal('marcarNoAplica', { idChecklist: c.idChecklist, justificacion: j })
+      .then(despues(b, 'Documento marcado como No aplica.'));
+  };
+  if ($('rvReactivar')) $('rvReactivar').onclick = function(){
+    var b = this; ocupado(b, true);
+    apiPortal('reactivarDocumento', { idChecklist: c.idChecklist })
+      .then(despues(b, 'Documento reactivado: vuelve a pedirse.'));
+  };
+}
+
+
+// ============================================================
+// EN DOCUMENTOS: botón "Revisar" para el personal interno
+// ============================================================
+
+var filaDocCliente = filaDoc;
+filaDoc = function(d){
+  var html = filaDocCliente(d);
+  if (!esInternoPortal()) return html;
+  var etiqueta = (d._e.k === 'rev') ? 'Revisar' : 'Detalle';
+  var boton = '<button type="button" class="btn ' + (d._e.k === 'rev' ? 'btn-p' : 'btn-g') + ' btn-sm" data-detalle="' + esc(d.idChecklist) + '">' + etiqueta + '</button>';
+  var fisico = d.fisico ? '<span class="sub" style="text-align:center;font-size:11px;color:var(--ok)">Original recibido</span>' : '';
+  return html.replace(/<\/div><\/div>$/, boton + fisico + '</div></div>');
+};
+
+var dibujarDocsCliente = dibujarDocs;
+dibujarDocs = function(){
+  dibujarDocsCliente();
+  if (!esInternoPortal()) return;
+  Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-detalle]'), function(b){
+    b.onclick = function(){
+      var d = DOCS.exp.documentos.filter(function(x){ return x.idChecklist === b.getAttribute('data-detalle'); })[0];
+      abrirRevision({
+        idChecklist: d.idChecklist, documento: d.documento, persona: d.persona,
+        contexto: CREDITO_ACTIVO.cliente + ' · ' + CREDITO_ACTIVO.idCredito,
+        estado: d.estado === 'Vencido' ? 'Entregado' : d.estado,
+        estadoRevision: d.estadoRevision, fisico: !!d.fisico
+      });
+    };
+  });
+};
+
+
+// ---------- botones fijos ----------
+$('rvActualizar').addEventListener('click', function(){ REV.lista = null; cargarBandeja(); });
+$('rvMios').addEventListener('change', dibujarBandeja);
+$('rvCerrar').addEventListener('click', function(){ $('ovRev').classList.remove('on'); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && $('ovRev').classList.contains('on')) $('ovRev').classList.remove('on');
 });
 
 </script>
