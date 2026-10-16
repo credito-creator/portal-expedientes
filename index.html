@@ -5702,7 +5702,22 @@ var CLAVE_ELEGIR = 'portal_factor_elegir_credito';
 // ---------- llamada única a la API ----------
 // Sin encabezado Content-Type a propósito: así el navegador no hace una
 // consulta previa que Apps Script no sabe contestar.
-function apiPortal(accion, datos){
+// Solo se reintentan consultas que NO modifican nada
+var ACCIONES_LECTURA = /^(ver|listar|mis|pendientes|cartera|catalogos|estructura|historial|resumen|gestion|condiciones|miPerfil|ping)/;
+
+function apiPortal(accion, datos, intento){
+  intento = intento || 0;
+  return apiPortalUnaVez(accion, datos).then(function(r){
+    var falloRed = r && r.ok === false && r.codigo === 'RED';
+    if (falloRed && intento < 2 && ACCIONES_LECTURA.test(accion)) {
+      return new Promise(function(listo){ setTimeout(listo, 800 * (intento + 1)); })
+        .then(function(){ return apiPortal(accion, datos, intento + 1); });
+    }
+    return r;
+  });
+}
+
+function apiPortalUnaVez(accion, datos){
   return fetch(CONEXION.API_URL, {
     method: 'POST',
     body: JSON.stringify({ accion: accion, datos: datos || {}, sesion: SESION ? SESION.sesion : null })
@@ -6198,27 +6213,15 @@ function abrirGestion(idCredito){
 
 function recargarGestion(liga){
   var op = COORD.gestion.op;
-  var pedidos = [
-    apiPortal('verExpediente', { idCredito: op.idCredito }),
-    apiPortal('listarPersonalidades', { idCliente: op.idCliente })
-  ];
-  pedidos.push(apiPortal('estructuraCliente', { idCliente: op.idCliente, idCredito: op.idCredito }));
-  if (puedeAltas()) pedidos.push(apiPortal('listarInvitaciones', { idCliente: op.idCliente }));
-
-  Promise.all(pedidos).then(function(rs){
-    var malo = rs.filter(function(r){ return !r.ok; })[0];
-    if (malo) { $('gcCuerpo').innerHTML = '<p class="acceso-error">' + esc(malo.mensaje) + '</p>'; return; }
-    COORD.gestion.exp = rs[0].datos;
-    COORD.gestion.personas = Array.isArray(rs[1].datos) ? rs[1].datos : [];
-    COORD.gestion.estructura = rs[2].datos && Array.isArray(rs[2].datos.personas) ? rs[2].datos : { personas: [], acreditado: '' };
+  apiPortal('gestionCredito', { idCredito: op.idCredito }).then(function(r){
+    if (!COORD.gestion) return;   // la ventana se cerró mientras cargaba
+    if (!r.ok) { $('gcCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
+    var d = r.datos || {};
+    COORD.gestion.exp = d.exp;
+    COORD.gestion.personas = Array.isArray(d.personas) ? d.personas : [];
+    COORD.gestion.estructura = d.estructura && Array.isArray(d.estructura.personas) ? d.estructura : { personas: [], acreditado: '' };
     COORD.gestion.avisoInv = '';
-    if (rs[3] && !Array.isArray(rs[3].datos)) {
-      // Respuesta inesperada: se muestra qué llegó para poder diagnosticarlo
-      var llego = rs[3].datos && typeof rs[3].datos === 'object' ? Object.keys(rs[3].datos).join(', ') : String(rs[3].datos);
-      console.warn('listarInvitaciones devolvió algo que no es lista:', rs[3]);
-      COORD.gestion.avisoInv = 'No se pudieron leer las invitaciones (llegó: ' + llego + ').';
-    }
-    COORD.gestion.invitaciones = rs[3] && Array.isArray(rs[3].datos) ? rs[3].datos.filter(function(i){
+    COORD.gestion.invitaciones = Array.isArray(d.invitaciones) ? d.invitaciones.filter(function(i){
       return i.idCredito === op.idCredito || i.idCredito === '*';
     }) : [];
     try {
@@ -6228,9 +6231,6 @@ function recargarGestion(liga){
       $('gcCuerpo').innerHTML = '<p class="acceso-error">No se pudo mostrar esta ventana: ' + esc(err && err.message ? err.message : String(err)) +
         '.<br>Manda una captura de este mensaje a quien administra el portal.</p>';
     }
-  }).catch(function(err){
-    console.error('Error al cargar Gestionar:', err);
-    $('gcCuerpo').innerHTML = '<p class="acceso-error">No se pudo cargar esta ventana: ' + esc(err && err.message ? err.message : String(err)) + '.</p>';
   });
 }
 
