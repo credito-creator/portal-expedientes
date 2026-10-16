@@ -6209,9 +6209,16 @@ function recargarGestion(liga){
     var malo = rs.filter(function(r){ return !r.ok; })[0];
     if (malo) { $('gcCuerpo').innerHTML = '<p class="acceso-error">' + esc(malo.mensaje) + '</p>'; return; }
     COORD.gestion.exp = rs[0].datos;
-    COORD.gestion.personas = rs[1].datos;
-    COORD.gestion.estructura = rs[2].datos;
-    COORD.gestion.invitaciones = rs[3] ? rs[3].datos.filter(function(i){
+    COORD.gestion.personas = Array.isArray(rs[1].datos) ? rs[1].datos : [];
+    COORD.gestion.estructura = rs[2].datos && Array.isArray(rs[2].datos.personas) ? rs[2].datos : { personas: [], acreditado: '' };
+    COORD.gestion.avisoInv = '';
+    if (rs[3] && !Array.isArray(rs[3].datos)) {
+      // Respuesta inesperada: se muestra qué llegó para poder diagnosticarlo
+      var llego = rs[3].datos && typeof rs[3].datos === 'object' ? Object.keys(rs[3].datos).join(', ') : String(rs[3].datos);
+      console.warn('listarInvitaciones devolvió algo que no es lista:', rs[3]);
+      COORD.gestion.avisoInv = 'No se pudieron leer las invitaciones (llegó: ' + llego + ').';
+    }
+    COORD.gestion.invitaciones = rs[3] && Array.isArray(rs[3].datos) ? rs[3].datos.filter(function(i){
       return i.idCredito === op.idCredito || i.idCredito === '*';
     }) : [];
     try {
@@ -6283,6 +6290,7 @@ function dibujarGestion(liga){
   // ---------- Invitaciones ----------
   if (puedeAltas()) {
     html += '<div class="gc-sec"><div class="gc-sec-h"><span>Acceso del cliente</span></div><div class="gc-sec-b">';
+    if (g.avisoInv) html += '<p class="acceso-error">' + esc(g.avisoInv) + '</p>';
 
     if (liga) {
       html += '<div class="gc-liga"><input id="gcLiga" readonly value="' + esc(liga.liga || liga.codigo) + '">' +
