@@ -5959,13 +5959,9 @@ function entrarCredito(c){
   $('sesionUsuario').textContent = (u.nombre || u.email) + ' · ' + u.email + ' · ' + u.rol;
   $('sesionbar').hidden = false;
 
-  // La simulación de roles desaparece; las herramientas de prueba solo las ve el personal
+  // Producción: la barra de simulación del portal de demostración ya no se muestra a nadie
   var sim = document.querySelector('.simbar');
-  if (sim) {
-    sim.hidden = (u.rol === 'Cliente');
-    var roles = sim.querySelector('.roles'); if (roles) roles.hidden = true;
-    var lbl = sim.querySelector('.sim-lbl'); if (lbl) lbl.textContent = 'Herramientas de prueba';
-  }
+  if (sim) sim.hidden = true;
 
   // Barra del crédito abierto (solo personal)
   if (u.rol !== 'Cliente') {
