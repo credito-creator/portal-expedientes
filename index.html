@@ -503,6 +503,11 @@ tbody tr:last-child td{border-bottom:0}
 .vi-img{height:100%;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px}
 .vi-img img{max-width:100%;height:auto;background:#fff}
 @media (max-width:760px){.visor-b{grid-template-columns:1fr;grid-template-rows:200px 1fr}.visor-ind{border-right:0;border-bottom:1px solid var(--line)}}
+.quien{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:3px;padding:2px 7px;margin:4px 0 2px}
+.q-tu{background:var(--accent-soft);color:var(--accent-ink)}
+.q-firma{background:var(--warn-soft,#FFF4D6);color:var(--warn,#8A6100)}
+.q-fgfc{background:var(--navy-soft);color:var(--navy)}
+.q-interno{background:var(--surface-2);color:var(--ink-3);border:1px dashed var(--line)}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -5653,10 +5658,15 @@ function convertirArchivoBase64(archivo) {
       <b>Arrastra el archivo aquí</b><span>o da clic para elegirlo — PDF, JPG, PNG, XML o ZIP, máximo 10 MB</span>
       <span id="suNombre" style="display:block;margin-top:8px;font-weight:600;color:var(--ok)"></span>
     </div>
-    <div class="f">
+    <div class="f" id="suFechaCaja">
       <label>Fecha del documento <span class="req" id="suFechaReq">*</span></label>
       <input type="date" id="suFecha">
       <span class="hint" id="suFechaHint"></span>
+    </div>
+    <div class="f" id="suMotivoCaja" hidden>
+      <label>Motivo <span class="req">*</span></label>
+      <input id="suMotivo" placeholder="Ej. Lo entregó en sucursal el 18/10/2026" autocomplete="off">
+      <span class="hint">Queda registrado en el historial del documento y en la bitácora.</span>
     </div>
     <p id="suErr" class="acceso-error" role="alert" hidden></p>
   </div>
@@ -6686,6 +6696,13 @@ function recargarDocs(){ DOCS.exp = null; return cargarDocs(); }
 // ---------- cómo se ve cada estado ----------
 function estadoDoc(d){
   if (d.estado === 'No aplica') return { k:'na',   txt:'No aplica',    badge:'b-na',   fila:'',       accion:null };
+  if (d.estadoRevision === 'Para firma')
+                                return { k:'pend', txt:'Para firma',   badge:'b-rev',  fila:'st-rev', accion:null };
+  if (d.responsable === 'Interno' && !esInternoPortal()) {
+    if (d.estado === 'Entregado' && d.estadoRevision === 'Aceptado') return { k:'ok', txt:'Completo', badge:'b-ok', fila:'st-ok', accion:null };
+    if (d.estado === 'Entregado') return { k:'rev', txt:'En proceso', badge:'b-rev', fila:'', accion:null };
+    return { k:'pend', txt:'Pendiente', badge:'b-pend', fila:'', accion:null };
+  }
   if (d.estado === 'Vencido')   return { k:'pend', txt:'Vencido',      badge:'b-bad',  fila:'st-bad', accion:'Subir uno vigente' };
   if (d.estado === 'Entregado' && d.estadoRevision === 'En revisión')
                                 return { k:'rev',  txt:'En revisión',  badge:'b-rev',  fila:'st-rev', accion:'Reemplazar' };
@@ -6780,7 +6797,7 @@ function dibujarDocs(){
     };
   });
   Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-subir]'), function(b){
-    b.onclick = function(){ abrirSubir(b.getAttribute('data-subir')); };
+    b.onclick = function(){ abrirSubir(b.getAttribute('data-subir'), b.getAttribute('data-modo') || 'normal'); };
   });
   Array.prototype.forEach.call($('docsConectados').querySelectorAll('[data-ver]'), function(b){
     b.onclick = function(){ verArchivo(b.getAttribute('data-ver'), b); };
@@ -6788,47 +6805,106 @@ function dibujarDocs(){
   $('docsActualizar').onclick = recargarDocs;
 }
 
+var QUIEN_DOC = {
+  cliente: {
+    'Cliente':       ['tu', 'Lo entregas tú'],
+    'Firma cliente': ['firma', 'Para tu firma: Factor GFC te lo envía y tú lo regresas firmado'],
+    'Nosotros':      ['fgfc', 'Lo prepara Factor GFC'],
+    'Interno':       ['interno', 'Uso interno de Factor GFC: solo verás si ya está completo']
+  },
+  interno: {
+    'Cliente':       ['tu', 'Lo entrega el cliente'],
+    'Firma cliente': ['firma', 'Lo prepara Factor GFC y lo firma el cliente'],
+    'Nosotros':      ['fgfc', 'Lo prepara Factor GFC (el cliente lo puede ver)'],
+    'Interno':       ['interno', 'Uso interno: el cliente solo ve si está completo']
+  }
+};
+
+function boton(clase, texto, attrs){
+  return '<button type="button" class="btn ' + clase + ' btn-sm" ' + attrs + '>' + esc(texto) + '</button>';
+}
+
 function filaDoc(d){
   var e = d._e, interno = esInternoPortal();
+  var resp = d.responsable || 'Cliente';
+  var quien = (interno ? QUIEN_DOC.interno : QUIEN_DOC.cliente)[resp] || ['tu', ''];
   var meta = [];
   if (d.compartido) meta.push(interno ? 'Compartido entre créditos de esta persona' : 'Sirve para todos tus créditos');
   if (d.fechaVencimiento && e.k !== 'na') meta.push((e.txt === 'Vencido' ? 'Venció ' : 'Vence ') + fechaMx(d.fechaVencimiento));
-  if (d.requiereVigencia && d.vigenciaMeses && e.k === 'pend') meta.push('Vigencia: ' + d.vigenciaMeses + ' meses desde su fecha');
-  if (interno) meta.push('Lo entrega: ' + (d.responsable === 'Cliente' ? 'el cliente' : 'Factor GFC'));
+  if (d.requiereVigencia && d.vigenciaMeses && e.k === 'pend' && resp === 'Cliente') meta.push('Vigencia: ' + d.vigenciaMeses + ' meses desde su fecha');
 
+  // Mensaje
   var msg = '';
-  if (e.txt === 'Rechazado' && d.observacion) msg = '<div class="doc-msg m-bad"><b>Hay que corregirlo:</b> ' + esc(d.observacion) + '</div>';
-  else if (e.txt === 'Vencido') msg = '<div class="doc-msg m-bad">Este documento ya venció. Sube uno con fecha más reciente.</div>';
-  else if (e.k === 'rev') msg = '<div class="doc-msg m-rev">Recibido. Lo está revisando un analista.</div>';
+  if (d.estadoRevision === 'Para firma') {
+    msg = '<div class="doc-msg m-rev">' + (interno ? 'Enviado al cliente para firma. Esperando la versión firmada.' : 'Descárgalo, fírmalo y súbelo firmado.') + '</div>';
+  } else if (e.txt === 'Rechazado' && d.observacion) msg = '<div class="doc-msg m-bad"><b>Hay que corregirlo:</b> ' + esc(d.observacion) + '</div>';
+  else if (e.txt === 'Vencido') msg = '<div class="doc-msg m-bad">Este documento ya venció. ' + (resp === 'Cliente' && !interno ? 'Sube uno con fecha más reciente.' : '') + '</div>';
+  else if (e.k === 'rev' && !(resp === 'Interno' && !interno)) msg = '<div class="doc-msg m-rev">Recibido. Lo está revisando un analista.</div>';
   else if (e.k === 'ok' && d.observacion) msg = '<div class="doc-msg m-ok">' + esc(d.observacion) + '</div>';
   else if (e.k === 'na' && d.observacion) msg = '<div class="doc-msg m-rev">' + esc(d.observacion) + '</div>';
+  else if (!interno && e.k === 'pend' && resp === 'Firma cliente') msg = '<div class="doc-msg m-rev">Factor GFC lo está preparando para tu firma.</div>';
+
+  // Botones según quién eres y quién lo entrega
+  var b = [], id = esc(d.idChecklist), sinArchivo = !d.idArchivoVigente;
+  if (!interno) {
+    if (resp === 'Cliente' && e.accion) b.push(boton(e.k === 'pend' ? 'btn-p' : 'btn-g', e.accion, 'data-subir="' + id + '" data-modo="normal"'));
+    if (resp === 'Firma cliente') {
+      if (d.estadoRevision === 'Para firma') {
+        b.push(boton('btn-g', 'Descargar para firmar', 'data-ver="' + esc(d.idArchivoVigente) + '"'));
+        b.push(boton('btn-p', 'Subir firmado', 'data-subir="' + id + '" data-modo="normal"'));
+      } else if (e.txt === 'Rechazado') {
+        b.push(boton('btn-p', 'Subir corrección firmada', 'data-subir="' + id + '" data-modo="normal"'));
+      }
+    }
+    if (d.idArchivoVigente && d.estadoRevision !== 'Para firma' && resp !== 'Interno') b.push(boton('btn-g', 'Ver archivo', 'data-ver="' + esc(d.idArchivoVigente) + '"'));
+  } else {
+    if (resp === 'Cliente') {
+      b.push(boton('btn-g', 'Subir en nombre del cliente', 'data-subir="' + id + '" data-modo="enNombre"'));
+    } else if (resp === 'Firma cliente') {
+      if (d.estadoRevision === 'Para firma') {
+        b.push(boton('btn-g', 'Reemplazar versión para firma', 'data-subir="' + id + '" data-modo="paraFirma"'));
+        b.push(boton('btn-g', 'Subir firmado en nombre del cliente', 'data-subir="' + id + '" data-modo="enNombre"'));
+      } else if (e.k === 'pend') {
+        b.push(boton('btn-p', e.txt === 'Rechazado' ? 'Reenviar para firma' : 'Enviar para firma', 'data-subir="' + id + '" data-modo="paraFirma"'));
+      } else if (e.k !== 'na') {
+        b.push(boton('btn-g', 'Reenviar para firma', 'data-subir="' + id + '" data-modo="paraFirma"'));
+      }
+    } else if (e.accion) {
+      b.push(boton(e.k === 'pend' ? 'btn-p' : 'btn-g', e.accion, 'data-subir="' + id + '" data-modo="normal"'));
+    }
+    if (d.idArchivoVigente) b.push(boton('btn-g', d.estadoRevision === 'Para firma' ? 'Ver versión para firma' : 'Ver archivo', 'data-ver="' + esc(d.idArchivoVigente) + '"'));
+  }
 
   return '<div class="doc ' + e.fila + '">' +
     '<div>' +
       '<div class="doc-nm">' + esc(d.documento) + (d.obligatorio ? '' : '<span class="op">Opcional</span>') + '</div>' +
+      '<div class="quien q-' + quien[0] + '">' + esc(quien[1]) + '</div>' +
       (d.instrucciones ? '<div class="doc-ay">' + esc(d.instrucciones) + '</div>' : '') +
       (meta.length ? '<div class="doc-meta">' + meta.map(function(m){ return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
       msg +
     '</div>' +
     '<div class="doc-act">' +
-      '<span class="badge ' + e.badge + '">' + esc(e.txt) + '</span>' +
-      (e.accion ? '<button type="button" class="btn ' + (e.k === 'pend' ? 'btn-p' : 'btn-g') + ' btn-sm" data-subir="' + esc(d.idChecklist) + '">' + esc(e.accion) + '</button>' : '') +
-      (d.idArchivoVigente ? '<button type="button" class="btn btn-g btn-sm" data-ver="' + esc(d.idArchivoVigente) + '">Ver archivo</button>' : '') +
+      '<span class="badge ' + e.badge + '">' + esc(e.txt) + '</span>' + b.join('') +
     '</div></div>';
 }
-
 
 // ============================================================
 // SUBIR / REEMPLAZAR
 // ============================================================
 
-function abrirSubir(idChecklist){
+function abrirSubir(idChecklist, modo){
   var d = DOCS.exp.documentos.filter(function(x){ return x.idChecklist === idChecklist; })[0];
   if (!d) return;
-  DOCS.subir = { doc: d, archivo: null };
+  modo = modo || 'normal';
+  DOCS.subir = { doc: d, archivo: null, modo: modo };
 
-  $('suTit').textContent = d.documento;
-  $('suSub').textContent = d.persona + (d.instrucciones ? ' · ' + d.instrucciones : '');
+  $('suTit').textContent = d.documento + (modo === 'paraFirma' ? ' · enviar para firma' : (modo === 'enNombre' ? ' · en nombre del cliente' : ''));
+  $('suSub').textContent = d.persona + (modo === 'paraFirma'
+    ? ' · Sube el documento listo para que el cliente lo descargue, lo firme y lo regrese.'
+    : (d.instrucciones ? ' · ' + d.instrucciones : ''));
+  $('suMotivoCaja').hidden = modo !== 'enNombre';
+  $('suMotivo').value = '';
+  $('suFechaCaja').hidden = modo === 'paraFirma';
   $('suNombre').textContent = '';
   $('suBox').classList.remove('has');
   $('suFile').value = '';
@@ -6868,7 +6944,8 @@ function enviarSubir(){
   var s = DOCS.subir, err = $('suErr');
   err.hidden = true;
   if (!s.archivo) { err.textContent = 'Elige el archivo que quieres subir.'; err.hidden = false; return; }
-  if (s.doc.requiereVigencia && !$('suFecha').value) { err.textContent = 'Indica la fecha del documento.'; err.hidden = false; return; }
+  if (s.doc.requiereVigencia && s.modo !== 'paraFirma' && !$('suFecha').value) { err.textContent = 'Indica la fecha del documento.'; err.hidden = false; return; }
+  if (s.modo === 'enNombre' && $('suMotivo').value.trim().length < 5) { err.textContent = 'Escribe el motivo por el que lo subes en nombre del cliente.'; err.hidden = false; return; }
 
   var btn = $('suOk');
   ocupado(btn, true, 'Subiendo…');
@@ -6880,12 +6957,15 @@ function enviarSubir(){
       idChecklist: s.doc.idChecklist,
       nombreArchivo: s.archivo.name,
       archivoBase64: String(lector.result),
-      fechaDocumento: $('suFecha').value
+      fechaDocumento: s.modo === 'paraFirma' ? '' : $('suFecha').value,
+      modo: s.modo,
+      motivo: $('suMotivo').value.trim()
     }).then(function(r){
       ocupado(btn, false);
       if (!r.ok) { err.textContent = r.mensaje; err.hidden = false; return; }
       $('ovSubir').classList.remove('on');
-      toast('Documento recibido' + (r.datos.version > 1 ? ' (versión ' + r.datos.version + ')' : '') + '. Queda en revisión.');
+      toast(s.modo === 'paraFirma' ? 'Enviado para firma: el cliente ya lo puede descargar.'
+        : 'Documento recibido' + (r.datos.version > 1 ? ' (versión ' + r.datos.version + ')' : '') + '. Queda en revisión.');
       recargarDocs();
     });
   };
@@ -7164,7 +7244,7 @@ var filaDocCliente = filaDoc;
 filaDoc = function(d){
   var html = filaDocCliente(d);
   if (!esInternoPortal()) return html;
-  var etiqueta = (d._e.k === 'rev') ? 'Revisar' : 'Detalle';
+  var etiqueta = (d._e.k === 'rev' && d.estadoRevision !== 'Para firma') ? 'Revisar' : 'Detalle';
   var boton = '<button type="button" class="btn ' + (d._e.k === 'rev' ? 'btn-p' : 'btn-g') + ' btn-sm" data-detalle="' + esc(d.idChecklist) + '">' + etiqueta + '</button>';
   var fisico = d.fisico ? '<span class="sub" style="text-align:center;font-size:11px;color:var(--ok)">Original recibido</span>' : '';
   return html.replace(/<\/div><\/div>$/, boton + fisico + '</div></div>');
