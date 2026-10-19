@@ -480,6 +480,29 @@ tbody tr:last-child td{border-bottom:0}
 .hist-ev b{font-size:14px;display:block}
 .hist-det{display:block;font-size:13px;color:var(--ink-2);margin-top:2px}
 .hist-pie{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.ov-visor{padding:12px}
+.visor{background:var(--surface);border-radius:10px;width:100%;height:100%;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px -20px rgba(0,0,0,.5)}
+.visor-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.visor-h b{display:block;color:var(--navy);font-size:15px}
+.visor-h #viSub{font-size:12px;color:var(--ink-3)}
+.visor-h .esp{margin-left:auto;font-size:12px;color:var(--ink-3);text-align:right;max-width:40%}
+.visor-b{flex:1;display:grid;grid-template-columns:310px 1fr;min-height:0}
+.visor-ind{overflow-y:auto;border-right:1px solid var(--line);background:var(--surface-2)}
+.vi-item{display:grid;grid-template-columns:38px 1fr;gap:6px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line-2);padding:10px 12px;cursor:pointer;font-family:var(--sans);color:var(--ink)}
+.vi-item:hover{background:var(--accent-soft)}
+.vi-item.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.vi-n{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding-top:2px}
+.vi-item b,.vi-falta b{display:block;font-size:13px}
+.vi-item small,.vi-falta small{display:block;font-size:11.5px;color:var(--ink-3)}
+.vi-tags em{font-style:normal;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ok);margin-right:6px}
+.vi-tags em.mal{color:var(--bad)}
+.vi-sec{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:14px 12px 6px}
+.vi-falta{padding:6px 12px 8px 50px;opacity:.8}
+.visor-doc{position:relative;background:#525659;min-height:0}
+.visor-doc iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.vi-img{height:100%;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px}
+.vi-img img{max-width:100%;height:auto;background:#fff}
+@media (max-width:760px){.visor-b{grid-template-columns:1fr;grid-template-rows:200px 1fr}.visor-ind{border-right:0;border-bottom:1px solid var(--line)}}
 /* ===== ACCESO (inicio de sesión y selección de crédito) ===== */
 .acceso{position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .acceso[hidden]{display:none}
@@ -5661,14 +5684,20 @@ function convertirArchivoBase64(archivo) {
   </div>
 </div></div>
 
-<!-- ============ EXPEDIENTE FINAL ============ -->
-<div class="ov" id="ovExp"><div class="mo" role="dialog" aria-modal="true" aria-labelledby="exTit">
-  <div class="mo-h"><b id="exTit">Expediente</b><span id="exSub"></span></div>
-  <div class="mo-b" id="exCuerpo"></div>
-  <div class="mo-f">
-    <button type="button" class="btn btn-g" id="exCancel">Cerrar</button>
-    <button type="button" class="btn btn-p" id="exOk">Generar</button>
+<!-- ============ EXPEDIENTE: visor ============ -->
+<div class="ov ov-visor" id="ovVisor"><div class="visor" role="dialog" aria-modal="true" aria-labelledby="viTit">
+  <div class="visor-h">
+    <div><b id="viTit">Expediente</b><span id="viSub"></span></div>
+    <span class="esp" id="viProg"></span>
+    <button type="button" class="btn btn-g btn-sm" id="viDescargar">Descargar PDF</button>
+    <button type="button" class="btn btn-p btn-sm" id="viImprimir">Imprimir expediente</button>
+    <button type="button" class="btn btn-g btn-sm" id="viCerrar">Cerrar</button>
   </div>
+  <div class="visor-b">
+    <nav class="visor-ind" id="viIndice" aria-label="Índice del expediente"></nav>
+    <div class="visor-doc" id="viDoc"></div>
+  </div>
+  <iframe id="viMarcoImpresion" title="Impresión" style="position:absolute;width:0;height:0;border:0;visibility:hidden"></iframe>
 </div></div>
 
 <!-- ============ COORDINACIÓN: altas ============ -->
@@ -7779,84 +7808,29 @@ function dibujarLinea(){
 
 <script>
 /* ============================================================
-   EXPEDIENTE FINAL — botón "Generar expediente" (personal interno)
+   EXPEDIENTE — visor dentro del portal (personal interno)
 
-   1. La API arma en Drive una carpeta nueva con los documentos
-      ACEPTADOS en orden y un índice en PDF.
-   2. Opcional: el portal une todo en un solo PDF (con pdf-lib, en
-      este navegador), lo descarga y lo guarda en esa carpeta.
+   "Ver expediente" abre el índice y los documentos ACEPTADOS en
+   orden, para consultarlos aquí mismo. "Imprimir" une todo en un
+   PDF en este navegador y abre el cuadro de impresión. No se crea
+   ni se guarda nada en Drive.
    ============================================================ */
 
-var EXPF = { resultado: null };
+var VISOR = { info: null, cache: {}, actual: null };
 var PDFLIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
 
-var dibujarDocsSinExp = dibujarDocs;
+var dibujarDocsSinVisor = dibujarDocs;
 dibujarDocs = function(){
-  dibujarDocsSinExp();
+  dibujarDocsSinVisor();
   if (!esInternoPortal() || !$('docsConectados')) return;
   var barra = $('docsConectados').querySelector('.cc-barra');
   if (!barra || barra.querySelector('#btnExpediente')) return;
   var b = document.createElement('button');
   b.type = 'button'; b.id = 'btnExpediente'; b.className = 'btn btn-p btn-sm';
-  b.textContent = 'Generar expediente';
-  b.onclick = abrirExpedienteFinal;
+  b.textContent = 'Ver expediente';
+  b.onclick = abrirVisor;
   barra.insertBefore(b, $('docsActualizar'));
 };
-
-function aceptadosDelCredito(){
-  return (DOCS.exp ? DOCS.exp.documentos : []).filter(function(d){ return d.estado !== 'No aplica' && d.estadoRevision === 'Aceptado'; });
-}
-
-function abrirExpedienteFinal(){
-  var n = aceptadosDelCredito().length;
-  var total = (DOCS.exp ? DOCS.exp.documentos : []).filter(function(d){ return d.estado !== 'No aplica'; }).length;
-  EXPF.resultado = null;
-  $('exTit').textContent = 'Expediente de ' + CREDITO_ACTIVO.idCredito;
-  $('exSub').textContent = CREDITO_ACTIVO.cliente;
-  $('exCuerpo').innerHTML =
-    '<p>Se armará con los <b>' + n + ' documentos aceptados</b> (de ' + total + ' requeridos), en el orden del checklist, con un índice en PDF.</p>' +
-    '<p class="gc-nota">Se crea una carpeta nueva en <b>Expediente final</b> del crédito en Drive, con la fecha y hora. Las versiones anteriores no se borran. ' +
-    'Los documentos en revisión, rechazados o pendientes no se incluyen; aparecen listados en el índice.</p>' +
-    (n ? '' : '<p class="acceso-error">Todavía no hay documentos aceptados.</p>');
-  $('exOk').hidden = !n;
-  $('exOk').textContent = 'Generar';
-  $('exOk').onclick = generarExpedienteFinal;
-  $('ovExp').classList.add('on');
-}
-
-function generarExpedienteFinal(){
-  var btn = $('exOk');
-  ocupado(btn, true, 'Generando…');
-  $('exCuerpo').innerHTML = '<p>Copiando los documentos en Drive y armando el índice… <span class="gc-nota">(puede tardar uno o dos minutos)</span></p>';
-  apiPortal('generarExpediente', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
-    ocupado(btn, false);
-    if (!r.ok) { $('exCuerpo').innerHTML = '<p class="acceso-error">' + esc(r.mensaje) + '</p>'; return; }
-    var d = EXPF.resultado = r.datos;
-    $('exCuerpo').innerHTML =
-      '<div class="alerta ok" style="margin-bottom:14px"><span class="alerta-ic">✓</span><div><b>' + esc(d.nombreCarpeta) + '</b> lista: ' +
-        d.incluidos.length + ' documento(s) e índice.' + (d.pendientes ? ' Quedaron ' + d.pendientes + ' pendiente(s) fuera.' : '') + '</div></div>' +
-      (d.errores.length ? '<p class="acceso-error">No se pudieron copiar: ' + esc(d.errores.join('; ')) + '</p>' : '') +
-      '<p><a href="' + esc(d.carpetaUrl) + '" target="_blank" rel="noopener">Abrir la carpeta en Drive</a> · ' +
-      '<a href="#" id="exVerIndice">Ver el índice</a></p>' +
-      '<div class="gc-sec"><div class="gc-sec-h"><span>Un solo PDF</span></div><div class="gc-sec-b">' +
-        '<p class="gc-nota">Une el índice y todos los documentos en un archivo para comité o envío. Se arma en este navegador, se descarga y se guarda también en la carpeta. ' +
-        'Los XML y ZIP no caben en un PDF: quedan en la carpeta y se señalan con una página.</p>' +
-        '<div id="exProg" class="gc-nota"></div>' +
-      '</div></div>';
-    $('exVerIndice').onclick = function(ev){ ev.preventDefault(); abrirBase64(d.indiceBase64, 'application/pdf', 'Indice.pdf'); };
-    btn.textContent = 'Armar un solo PDF';
-    btn.onclick = armarPdfUnico;
-    if (DOCS.exp) recargarDocs();
-  });
-}
-
-function abrirBase64(b64, mime, nombre){
-  var bin = atob(b64), bytes = new Uint8Array(bin.length);
-  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
-  var w = window.open(url, '_blank');
-  if (!w) { var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); }
-}
 
 function b64aBytes(b64){
   var bin = atob(b64), bytes = new Uint8Array(bin.length);
@@ -7864,12 +7838,95 @@ function b64aBytes(b64){
   return bytes;
 }
 
-function bytesAB64(bytes){
-  var s = '', paso = 0x8000;
-  for (var i = 0; i < bytes.length; i += paso) s += String.fromCharCode.apply(null, bytes.subarray(i, i + paso));
-  return btoa(s);
+// ---------- abrir ----------
+function abrirVisor(){
+  VISOR.info = null; VISOR.cache = {}; VISOR.actual = null;
+  $('viTit').textContent = 'Expediente · ' + CREDITO_ACTIVO.idCredito;
+  $('viSub').textContent = CREDITO_ACTIVO.cliente;
+  $('viIndice').innerHTML = '<p class="gc-nota" style="padding:14px">Cargando…</p>';
+  $('viDoc').innerHTML = '';
+  $('viProg').textContent = '';
+  $('viImprimir').disabled = true; $('viDescargar').disabled = true;
+  $('ovVisor').classList.add('on');
+  document.body.style.overflow = 'hidden';
+
+  apiPortal('verExpedienteFinal', { idCredito: CREDITO_ACTIVO.idCredito }).then(function(r){
+    if (!r.ok) { $('viIndice').innerHTML = '<p class="acceso-error" style="padding:14px">' + esc(r.mensaje) + '</p>'; return; }
+    VISOR.info = r.datos;
+    VISOR.cache['indice'] = { mime: 'application/pdf', bytes: b64aBytes(r.datos.indiceBase64) };
+    dibujarIndiceVisor();
+    $('viImprimir').disabled = !r.datos.incluidos.length;
+    $('viDescargar').disabled = !r.datos.incluidos.length;
+    mostrarEnVisor('indice');
+  });
 }
 
+function cerrarVisor(){
+  $('ovVisor').classList.remove('on');
+  document.body.style.overflow = '';
+  Object.keys(VISOR.cache).forEach(function(k){ if (VISOR.cache[k] && VISOR.cache[k].url) URL.revokeObjectURL(VISOR.cache[k].url); });
+  VISOR.cache = {};
+}
+
+// ---------- índice ----------
+function dibujarIndiceVisor(){
+  var i = VISOR.info;
+  var html = '<button type="button" class="vi-item" data-vi="indice"><span class="vi-n">000</span><span><b>Índice del expediente</b><small>' +
+    i.incluidos.length + ' aceptados · ' + i.pendientes.length + ' pendientes</small></span></button>';
+  if (!i.incluidos.length) html += '<p class="gc-nota" style="padding:10px 14px">Todavía no hay documentos aceptados.</p>';
+  i.incluidos.forEach(function(x){
+    html += '<button type="button" class="vi-item" data-vi="' + esc(x.idArchivo) + '">' +
+      '<span class="vi-n">' + String(x.orden).padStart(3, '0') + '</span>' +
+      '<span><b>' + esc(x.documento) + '</b><small>' + esc(x.persona) + '</small>' +
+      '<span class="vi-tags">' + (x.vencido ? '<em class="mal">Vencido</em>' : '') + (x.fisico ? '<em>Original</em>' : '') + '</span></span></button>';
+  });
+  if (i.pendientes.length) {
+    html += '<div class="vi-sec">Falta (' + i.pendientes.length + ')</div>' + i.pendientes.map(function(p){
+      return '<div class="vi-falta"><b>' + esc(p.documento) + '</b><small>' + esc(p.persona) + ' · ' + esc(p.estado) + '</small></div>';
+    }).join('');
+  }
+  if (i.noAplica.length) {
+    html += '<div class="vi-sec">No aplica (' + i.noAplica.length + ')</div>' + i.noAplica.map(function(p){
+      return '<div class="vi-falta"><b>' + esc(p.documento) + '</b><small>' + esc(p.persona) + (p.justificacion ? ' · ' + esc(p.justificacion) : '') + '</small></div>';
+    }).join('');
+  }
+  $('viIndice').innerHTML = html;
+  Array.prototype.forEach.call($('viIndice').querySelectorAll('[data-vi]'), function(b){
+    b.onclick = function(){ mostrarEnVisor(b.getAttribute('data-vi')); };
+  });
+}
+
+// ---------- mostrar un documento ----------
+function urlDe(k){
+  var c = VISOR.cache[k];
+  if (!c.url) c.url = URL.createObjectURL(new Blob([c.bytes], { type: c.mime }));
+  return c.url;
+}
+
+function mostrarEnVisor(k){
+  VISOR.actual = k;
+  Array.prototype.forEach.call($('viIndice').querySelectorAll('[data-vi]'), function(b){
+    b.classList.toggle('on', b.getAttribute('data-vi') === k);
+  });
+  var pintar = function(){
+    var c = VISOR.cache[k];
+    if (VISOR.actual !== k) return;
+    if (!c) { $('viDoc').innerHTML = '<p class="acceso-error" style="padding:20px">No se pudo cargar este documento.</p>'; return; }
+    if (/pdf/.test(c.mime)) $('viDoc').innerHTML = '<iframe title="Documento" src="' + urlDe(k) + '"></iframe>';
+    else if (/jpe?g|png/.test(c.mime)) $('viDoc').innerHTML = '<div class="vi-img"><img alt="Documento" src="' + urlDe(k) + '"></div>';
+    else $('viDoc').innerHTML = '<div style="padding:24px"><p>Este archivo (' + esc(c.mime) + ') no se puede mostrar aquí.</p>' +
+      '<a class="btn btn-g btn-sm" download="documento" href="' + urlDe(k) + '">Descargar</a></div>';
+  };
+  if (VISOR.cache[k]) return pintar();
+  $('viDoc').innerHTML = '<p class="gc-nota" style="padding:20px">Abriendo documento…</p>';
+  apiPortal('descargarLote', { ids: [k] }).then(function(r){
+    var a = r.ok && r.datos.archivos[0];
+    VISOR.cache[k] = a && !a.error ? { mime: a.tipoMime, bytes: b64aBytes(a.archivoBase64) } : null;
+    pintar();
+  });
+}
+
+// ---------- imprimir / descargar ----------
 function cargarPdfLib(){
   if (window.PDFLib) return Promise.resolve(window.PDFLib);
   return new Promise(function(ok, mal){
@@ -7881,103 +7938,102 @@ function cargarPdfLib(){
   });
 }
 
-function armarPdfUnico(){
-  var d = EXPF.resultado, btn = $('exOk'), prog = $('exProg');
-  ocupado(btn, true, 'Armando…');
-  var progreso = function(t){ prog.textContent = t; };
+function armarPdfExpediente(){
+  var i = VISOR.info, prog = function(t){ $('viProg').textContent = t; };
+  var faltan = i.incluidos.map(function(x){ return x.idArchivo; }).filter(function(id){ return !VISOR.cache[id]; });
+  var total = i.incluidos.length;
 
-  var lista = d.incluidos.slice();
-  var ids = lista.map(function(x){ return x.idArchivo; });
-  var bytesDe = {};
-
-  progreso('Cargando la librería de PDF…');
-  cargarPdfLib().then(function(PDFLib){
-    // Descarga por lotes
-    var faltan = ids.slice();
-    var descargar = function(){
-      if (!faltan.length) return Promise.resolve();
-      progreso('Descargando documentos: ' + (ids.length - faltan.length) + ' de ' + ids.length + '…');
-      return apiPortal('descargarLote', { ids: faltan }).then(function(r){
-        if (!r.ok) throw new Error(r.mensaje);
-        r.datos.archivos.forEach(function(a){ bytesDe[a.idArchivo] = a.error ? null : { mime: a.tipoMime, bytes: b64aBytes(a.archivoBase64) }; });
-        var entregados = r.datos.archivos.map(function(a){ return a.idArchivo; });
-        faltan = faltan.filter(function(id){ return entregados.indexOf(id) === -1; });
-        if (!entregados.length) throw new Error('El servidor no entregó archivos.');
-        return descargar();
+  var descargar = function(){
+    if (!faltan.length) return Promise.resolve();
+    prog('Preparando documentos: ' + (total - faltan.length) + ' de ' + total + '…');
+    return apiPortal('descargarLote', { ids: faltan }).then(function(r){
+      if (!r.ok) throw new Error(r.mensaje);
+      var entregados = [];
+      r.datos.archivos.forEach(function(a){
+        VISOR.cache[a.idArchivo] = a.error ? null : { mime: a.tipoMime, bytes: b64aBytes(a.archivoBase64) };
+        entregados.push(a.idArchivo);
       });
-    };
-
-    return descargar().then(function(){
-      progreso('Uniendo ' + lista.length + ' documentos…');
-      return PDFLib.PDFDocument.create().then(function(salida){
-        var fuente;
-        var paginaAviso = function(texto){
-          var p = salida.addPage([612, 792]);
-          p.drawText(texto, { x: 50, y: 720, size: 12, font: fuente, maxWidth: 512, lineHeight: 16 });
-        };
-        var agregarPdf = function(bytes){
-          return PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true }).then(function(src){
-            return salida.copyPages(src, src.getPageIndices()).then(function(pags){ pags.forEach(function(p){ salida.addPage(p); }); });
-          });
-        };
-        var agregarImagen = function(bytes, mime){
-          var emb = /png/.test(mime) ? salida.embedPng(bytes) : salida.embedJpg(bytes);
-          return emb.then(function(img){
-            var esc2 = Math.min(552 / img.width, 732 / img.height, 1);
-            var p = salida.addPage([612, 792]);
-            p.drawImage(img, { x: (612 - img.width * esc2) / 2, y: (792 - img.height * esc2) / 2, width: img.width * esc2, height: img.height * esc2 });
-          });
-        };
-
-        return salida.embedFont(PDFLib.StandardFonts.Helvetica).then(function(f){ fuente = f; })
-          .then(function(){ return agregarPdf(b64aBytes(d.indiceBase64)); })
-          .then(function(){
-            var cadena = Promise.resolve();
-            lista.forEach(function(x, i){
-              cadena = cadena.then(function(){
-                progreso('Uniendo ' + (i + 1) + ' de ' + lista.length + ': ' + x.nombre);
-                var a = bytesDe[x.idArchivo];
-                var aviso = function(motivo){ paginaAviso(x.nombre + '\n\n' + motivo + '\nConsulta el archivo en la carpeta del expediente.'); };
-                if (!a) return aviso('No se pudo descargar.');
-                if (/pdf/.test(a.mime)) return agregarPdf(a.bytes).catch(function(){ aviso('Este PDF no se pudo unir (puede estar protegido).'); });
-                if (/jpe?g|png/.test(a.mime)) return agregarImagen(a.bytes, a.mime).catch(function(){ aviso('Esta imagen no se pudo unir.'); });
-                return aviso('Archivo ' + (a.mime || '') + ': no se puede incluir dentro de un PDF.');
-              });
-            });
-            return cadena;
-          })
-          .then(function(){ return salida.save(); });
-      });
-    }).then(function(bytes){
-      var nombre = 'Expediente ' + CREDITO_ACTIVO.idCredito + ' - ' + d.nombreCarpeta.replace('Expediente ', '') + '.pdf';
-      var mb = bytes.length / 1048576;
-      // Descarga local
-      var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-      var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
-
-      if (mb > 25) {
-        progreso('Listo: se descargó "' + nombre + '" (' + mb.toFixed(1) + ' MB). Es demasiado grande para guardarlo en Drive desde aquí; súbelo a la carpeta a mano si lo necesitas.');
-        ocupado(btn, false); btn.hidden = true;
-        return;
-      }
-      progreso('Guardando en Drive (' + mb.toFixed(1) + ' MB)…');
-      return apiPortalUnaVez('guardarExpedientePdf', {
-        idCredito: CREDITO_ACTIVO.idCredito, carpetaId: d.carpetaId, nombre: nombre, archivoBase64: bytesAB64(bytes)
-      }).then(function(r){
-        ocupado(btn, false); btn.hidden = true;
-        progreso(r.ok ? 'Listo: "' + nombre + '" se descargó y quedó guardado en la carpeta del expediente.'
-                      : 'Se descargó "' + nombre + '", pero no se pudo guardar en Drive: ' + r.mensaje);
-      });
+      if (!entregados.length) throw new Error('El servidor no entregó archivos.');
+      faltan = faltan.filter(function(id){ return entregados.indexOf(id) === -1; });
+      return descargar();
     });
-  }).catch(function(err){
-    ocupado(btn, false);
-    progreso('');
-    $('exProg').innerHTML = '<span class="acceso-error">No se pudo armar el PDF: ' + esc(err.message || String(err)) + '. La carpeta con los documentos sí quedó lista.</span>';
-    reportarErrorPortal('PDF único ' + CREDITO_ACTIVO.idCredito, err && err.stack ? err.stack : String(err));
+  };
+
+  prog('Cargando la librería de PDF…');
+  return cargarPdfLib().then(function(PDFLib){
+    return descargar().then(function(){ return PDFLib.PDFDocument.create(); }).then(function(salida){
+      var fuente;
+      var aviso = function(texto){
+        salida.addPage([612, 792]).drawText(texto, { x: 50, y: 720, size: 12, font: fuente, maxWidth: 512, lineHeight: 16 });
+      };
+      var agregarPdf = function(bytes){
+        return PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true }).then(function(src){
+          return salida.copyPages(src, src.getPageIndices()).then(function(p){ p.forEach(function(x){ salida.addPage(x); }); });
+        });
+      };
+      var agregarImagen = function(bytes, mime){
+        return (/png/.test(mime) ? salida.embedPng(bytes) : salida.embedJpg(bytes)).then(function(img){
+          var e = Math.min(552 / img.width, 732 / img.height, 1);
+          salida.addPage([612, 792]).drawImage(img, { x: (612 - img.width * e) / 2, y: (792 - img.height * e) / 2, width: img.width * e, height: img.height * e });
+        });
+      };
+      return salida.embedFont(PDFLib.StandardFonts.Helvetica).then(function(f){ fuente = f; })
+        .then(function(){ return agregarPdf(VISOR.cache['indice'].bytes); })
+        .then(function(){
+          var cadena = Promise.resolve();
+          i.incluidos.forEach(function(x, n){
+            cadena = cadena.then(function(){
+              prog('Uniendo ' + (n + 1) + ' de ' + total + ': ' + x.documento);
+              var a = VISOR.cache[x.idArchivo];
+              var nombre = String(x.orden).padStart(3, '0') + ' ' + x.documento + ' - ' + x.persona;
+              if (!a) return aviso(nombre + '\n\nNo se pudo cargar este documento.');
+              if (/pdf/.test(a.mime)) return agregarPdf(a.bytes).catch(function(){ aviso(nombre + '\n\nEste PDF no se pudo unir (puede estar protegido). Consúltalo en el visor.'); });
+              if (/jpe?g|png/.test(a.mime)) return agregarImagen(a.bytes, a.mime).catch(function(){ aviso(nombre + '\n\nEsta imagen no se pudo unir.'); });
+              return aviso(nombre + '\n\nArchivo ' + a.mime + ': no se puede incluir en un PDF. Consúltalo en el visor.');
+            });
+          });
+          return cadena;
+        })
+        .then(function(){ return salida.save().then(function(bytes){ return { bytes: bytes, paginas: salida.getPageCount() }; }); });
+    });
   });
 }
 
-$('exCancel').addEventListener('click', function(){ $('ovExp').classList.remove('on'); });
+function imprimirExpediente(descargar){
+  var btn = descargar ? $('viDescargar') : $('viImprimir');
+  ocupado(btn, true, descargar ? 'Preparando…' : 'Preparando…');
+  armarPdfExpediente().then(function(res){
+    ocupado(btn, false);
+    var url = URL.createObjectURL(new Blob([res.bytes], { type: 'application/pdf' }));
+    var nombre = 'Expediente ' + CREDITO_ACTIVO.idCredito + '.pdf';
+    apiPortalUnaVez('registrarImpresion', { idCredito: CREDITO_ACTIVO.idCredito, accion: descargar ? 'descargar' : 'imprimir',
+      documentos: VISOR.info.incluidos.length, paginas: res.paginas });
+
+    if (descargar) {
+      var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+      $('viProg').textContent = 'Listo: se descargó "' + nombre + '" (' + res.paginas + ' páginas).';
+      return;
+    }
+    // Imprimir: se carga en un marco oculto y se abre el cuadro de impresión
+    var marco = $('viMarcoImpresion');
+    marco.onload = function(){
+      try { marco.contentWindow.focus(); marco.contentWindow.print(); $('viProg').textContent = 'Listo: ' + res.paginas + ' páginas enviadas a imprimir.'; }
+      catch(e){ window.open(url, '_blank'); $('viProg').textContent = 'Se abrió el expediente en otra pestaña: imprímelo desde ahí (' + res.paginas + ' páginas).'; }
+    };
+    marco.src = url;
+  }).catch(function(err){
+    ocupado(btn, false);
+    $('viProg').textContent = 'No se pudo armar el PDF: ' + (err.message || err);
+    reportarErrorPortal('Imprimir expediente ' + CREDITO_ACTIVO.idCredito, err && err.stack ? err.stack : String(err));
+  });
+}
+
+$('viCerrar').addEventListener('click', cerrarVisor);
+$('viImprimir').addEventListener('click', function(){ imprimirExpediente(false); });
+$('viDescargar').addEventListener('click', function(){ imprimirExpediente(true); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && $('ovVisor').classList.contains('on')) cerrarVisor();
+});
 
 </script>
 </body>
